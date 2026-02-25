@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import {
   BarChart,
   Bar,
@@ -17,6 +18,12 @@ import { TrendingUp, Users, DollarSign, Activity, ArrowUpRight, ArrowDownRight }
 const COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4'];
 
 export default function DashboardClient({ data }: { data: any }) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const { total, totalMonth, byCategory, recent, totalCount, userCount } = data;
 
   const barData = byCategory.slice(0, 5).map((c: any) => ({
@@ -36,6 +43,9 @@ export default function DashboardClient({ data }: { data: any }) {
       maximumFractionDigits: 0
     }).format(amount);
   };
+
+  if (!isMounted) return null;
+
 
   return (
     <div className="dashboard-container">

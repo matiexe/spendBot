@@ -44,6 +44,8 @@ def inicializar_bd():
             categoria_id INTEGER NOT NULL,
             descripcion TEXT,
             fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            cuenta TEXT DEFAULT '-',
+            origen TEXT DEFAULT 'N/A',
             FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario),
             FOREIGN KEY (categoria_id) REFERENCES categorias(id)
         )
@@ -142,9 +144,9 @@ def registrar_gasto(id_usuario, monto, categoria, descripcion=''):
     # Insertar gasto
     cursor.execute(
         '''INSERT INTO gastos 
-           (id_usuario, monto, categoria_id, descripcion, fecha) 
-           VALUES (?, ?, ?, ?, ?)''',
-        (id_usuario, monto, categoria_id, descripcion, datetime.now())
+           (id_usuario, monto, categoria_id, descripcion, fecha, cuenta, origen) 
+           VALUES (?, ?, ?, ?, ?, ?, ?)''',
+        (id_usuario, monto, categoria_id, descripcion, datetime.now(), '-', 'Telegram')
     )
     
     conn.commit()

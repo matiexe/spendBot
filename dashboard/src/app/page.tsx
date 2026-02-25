@@ -7,8 +7,8 @@ export default async function Home() {
   const data = getDashboardData();
 
   return (
-    <main>
+    <>
       <DashboardClient data={data} />
-    </main>
+    </>
   );
 }
