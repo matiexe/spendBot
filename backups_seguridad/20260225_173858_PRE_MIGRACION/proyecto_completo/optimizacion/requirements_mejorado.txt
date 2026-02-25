@@ -1,0 +1,6 @@
+python-telegram-bot==20.3
+anthropic==0.32.1
+python-dotenv==1.0.0
+matplotlib==3.8.2
+Pillow==10.1.0
+requests==2.31.0
