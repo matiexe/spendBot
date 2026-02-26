@@ -24,7 +24,7 @@ from config_mejorada import (
 logger = logging.getLogger(__name__)
 
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
-GEMINI_MODEL   = os.getenv('GEMINI_MODEL', 'models/gemini-2.0-flash')
+GEMINI_MODEL   = os.getenv('GEMINI_MODEL', 'models/gemini-2.0-flash-lite')
 
 
 class DetectorCategorias:
