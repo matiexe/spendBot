@@ -50,16 +50,28 @@ class DetectorCategorias:
     # ---- Helpers ----
 
     def _ask(self, prompt: str, max_tokens: int = 500) -> str:
-        """Envía un prompt a Gemini y retorna el texto de respuesta."""
-        response = self.client.models.generate_content(
-            model=self.model,
-            contents=prompt,
-            config=genai_types.GenerateContentConfig(
-                max_output_tokens=max_tokens,
-                temperature=0.2,
-            ),
-        )
-        return response.text.strip()
+        """Envía un prompt a Gemini y retorna el texto de respuesta. Reintenta ante rate limit."""
+        import time
+        for intento in range(3):
+            try:
+                response = self.client.models.generate_content(
+                    model=self.model,
+                    contents=prompt,
+                    config=genai_types.GenerateContentConfig(
+                        max_output_tokens=max_tokens,
+                        temperature=0.2,
+                    ),
+                )
+                return response.text.strip()
+            except Exception as e:
+                msg = str(e)
+                if '429' in msg and intento < 2:
+                    espera = (intento + 1) * 5
+                    logger.warning(f"Rate limit Gemini, esperando {espera}s... (intento {intento+1}/3)")
+                    time.sleep(espera)
+                else:
+                    raise
+        raise RuntimeError("Gemini no respondió tras 3 intentos")
 
     # ---- Detección principal ----
 
@@ -142,7 +154,57 @@ class DetectorCategorias:
         logger.warning(f"No se pudo parsear JSON: {texto}")
         return {'tipo': 'GASTO', 'categoria': None, 'monto': None, 'confianza': 'baja'}
 
-    # ---- Validación ----
+    @staticmethod
+    def _parsear_monto(valor) -> float | None:
+        """
+        Convierte distintos formatos a float:
+        '4500', '4.500', '4,500', '4500 pesos', '$4.500', '$ 4500', None
+        """
+        if valor is None:
+            return None
+        s = str(valor).strip()
+        # Quitar símbolos monetarios y texto después de espacio
+        s = re.sub(r'[$\u20ac\u00a3]', '', s)          # $, €, £
+        s = s.split()[0] if s.split() else s           # '4500 pesos' -> '4500'
+        # Si hay punto Y coma: probable separador de miles y décimas
+        if '.' in s and ',' in s:
+            # Formato europeo: 1.234,56
+            s = s.replace('.', '').replace(',', '.')
+        elif ',' in s:
+            # Puede ser separador decimal (1,5) o de miles (1,500)
+            partes = s.split(',')
+            if len(partes) == 2 and len(partes[1]) <= 2:
+                s = s.replace(',', '.')   # decimal
+            else:
+                s = s.replace(',', '')    # miles
+        elif '.' in s:
+            partes = s.split('.')
+            if len(partes) == 2 and len(partes[1]) > 2:
+                s = s.replace('.', '')    # separador de miles (4.500)
+        try:
+            return float(s)
+        except ValueError:
+            return None
+
+    @staticmethod
+    def _extraer_monto_del_mensaje(mensaje: str) -> float | None:
+        """Extrae el primer número encontrado en el mensaje como fallback."""
+        # Busca patrones como: $4500, 4500 pesos, 4.500, 4,500
+        patrones = [
+            r'\$\s*([\d][\d.,]*)',      # $4500 o $ 4.500
+            r'([\d][\d.,]*)\s*pesos',   # 4500 pesos
+            r'([\d][\d.,]*)\s*ARS',     # 4500 ARS
+            r'por\s+([\d][\d.,]*)',     # por 4500
+            r'de\s+([\d][\d.,]*)',      # de 4500
+            r'([\d]{2,}[.,]?[\d]*)',    # número de 2+ dígitos
+        ]
+        for patron in patrones:
+            match = re.search(patron, mensaje, re.IGNORECASE)
+            if match:
+                val = DetectorCategorias._parsear_monto(match.group(1))
+                if val and val > 0:
+                    return val
+        return None
 
     def _validar_resultado(self, resultado: dict, tipo_detectado: str) -> dict:
         resultado['tipo'] = (resultado.get('tipo') or tipo_detectado).upper()
@@ -151,7 +213,6 @@ class DetectorCategorias:
             cats = CATEGORIAS_GASTOS if resultado['tipo'] == 'GASTO' else CATEGORIAS_INGRESOS
             cat_norm = resultado['categoria'].lower().replace(' ', '_')
             if cat_norm not in cats:
-                # Buscar por nombre amigable
                 for key, cat in cats.items():
                     if cat['nombre'].lower() == resultado['categoria'].lower():
                         cat_norm = key
@@ -159,12 +220,14 @@ class DetectorCategorias:
                 else:
                     cat_norm = list(cats.keys())[-1]   # fallback 'otros'
             resultado['categoria'] = cat_norm
+        else:
+            resultado['categoria'] = 'otros'
 
-        if resultado.get('monto') is not None:
-            try:
-                resultado['monto'] = float(resultado['monto'])
-            except (ValueError, TypeError):
-                resultado['monto'] = None
+        # Parseo robusto del monto
+        monto_parseado = self._parsear_monto(resultado.get('monto'))
+        if not monto_parseado and resultado.get('mensaje_original'):
+            monto_parseado = self._extraer_monto_del_mensaje(resultado['mensaje_original'])
+        resultado['monto'] = monto_parseado
 
         if resultado.get('confianza') not in ('alta', 'media', 'baja'):
             resultado['confianza'] = 'media'

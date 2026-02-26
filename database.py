@@ -123,10 +123,15 @@ def obtener_o_crear_usuario(id_usuario, nombre, username):
 
 # ============= FUNCIONES DE GASTOS =============
 
-def registrar_gasto(id_usuario, monto, categoria, descripcion='', origen='Telegram'):
-    """Registra un nuevo gasto"""
+def registrar_gasto(id_usuario, monto, categoria, descripcion='', origen='Telegram', tipo=None):
+    """Registra un nuevo gasto/ingreso"""
     conn = sqlite3.connect(DATABASE_FILE)
     cursor = conn.cursor()
+    
+    # Derivar tipo si no se pasa explícitamente (compatibilidad con código viejo)
+    if tipo is None:
+        tipo = 'GASTO' if monto <= 0 else 'INGRESO'
+    tipo = tipo.upper()
     
     # Obtener ID de la categoría (búsqueda case-insensitive)
     cursor.execute(
@@ -141,21 +146,21 @@ def registrar_gasto(id_usuario, monto, categoria, descripcion='', origen='Telegr
         result = cursor.fetchone()
         if not result:
             conn.close()
-            raise ValueError(f"No hay categorías en la base de datos")
+            raise ValueError("No hay categorías en la base de datos")
     
     categoria_id = result[0]
     
-    # Insertar gasto
+    # Insertar gasto con tipo incluido
     cursor.execute(
         '''INSERT INTO gastos 
-           (id_usuario, monto, categoria_id, descripcion, fecha, cuenta, origen) 
-           VALUES (?, ?, ?, ?, ?, ?, ?)''',
-        (id_usuario, monto, categoria_id, descripcion, datetime.now(), '-', origen)
+           (id_usuario, tipo, monto, categoria_id, descripcion, fecha, cuenta, origen) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+        (id_usuario, tipo, abs(monto), categoria_id, descripcion, datetime.now(), '-', origen)
     )
     
     conn.commit()
     conn.close()
-    logger.info(f"Gasto registrado: {id_usuario} - ${monto} en {categoria} [{origen}]")
+    logger.info(f"Transacción registrada: {id_usuario} - {tipo} ${abs(monto):.2f} en {categoria} [{origen}]")
 
 def obtener_gastos_hoy(id_usuario):
     """Obtiene los gastos de hoy"""

@@ -118,17 +118,15 @@ async def ia_confirmar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     monto_raw = deteccion.get('monto') or 0
     monto = float(monto_raw)
 
-    # Para gastos el monto va negativo en nuestra BD
-    monto_bd = -abs(monto) if tipo == 'GASTO' else abs(monto)
-
     try:
         obtener_o_crear_usuario(usuario_id, nombre, username)
         registrar_gasto(
             usuario_id,
-            monto_bd,
+            monto,           # siempre positivo, tipo indica dirección
             categoria,
             mensaje_original,
-            origen='Telegram'
+            origen='Telegram',
+            tipo=tipo        # pasamos explícitamente GASTO o INGRESO
         )
         tipo_emoji = '💸' if tipo == 'GASTO' else '💰'
         await query.edit_message_text(
