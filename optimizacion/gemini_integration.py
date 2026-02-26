@@ -24,7 +24,7 @@ from config_mejorada import (
 logger = logging.getLogger(__name__)
 
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
-GEMINI_MODEL   = os.getenv('GEMINI_MODEL', 'models/gemini-2.0-flash-lite')
+GEMINI_MODEL   = os.getenv('GEMINI_MODEL', 'models/gemini-3-flash-preview')
 
 
 class DetectorCategorias:
@@ -85,10 +85,10 @@ class DetectorCategorias:
         try:
             tipo_detectado = self._detectar_tipo(mensaje)
             prompt          = generar_prompt_deteccion(mensaje, tipo=tipo_detectado)
-            respuesta_texto = self._ask(prompt)
+            respuesta_texto = self._ask(prompt, max_tokens=1024)
             resultado       = self._parsear_json(respuesta_texto)
+            resultado['mensaje_original'] = mensaje   # disponible ANTES de validar
             resultado       = self._validar_resultado(resultado, tipo_detectado)
-            resultado['mensaje_original'] = mensaje
             logger.info(f"Detección exitosa: {resultado}")
             return resultado
         except Exception as e:
