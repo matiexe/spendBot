@@ -18,12 +18,29 @@ logger = logging.getLogger(__name__)
 # Estados del ConversationHandler
 IA_MENSAJE, IA_CONFIRMAR = range(10, 12)
 
-# ----------- Lazy import para no fallar si el módulo no está listo -----------
+# ----------- Lazy imports -----------
 def _get_detector():
     import sys, os
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'optimizacion'))
     from gemini_integration import detectar_gasto_o_ingreso, obtener_recomendaciones
     return detectar_gasto_o_ingreso, obtener_recomendaciones
+
+def _resolver_categoria_nombre(cat_key: str, tipo: str) -> str:
+    """
+    Convierte la KEY del dict de categorias al NOMBRE real que está en la BD.
+    Ej: 'comida' -> 'Comida', 'otros_ingresos' -> 'Otros'
+    """
+    try:
+        import sys, os
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'optimizacion'))
+        from config_mejorada import CATEGORIAS_GASTOS, CATEGORIAS_INGRESOS
+        cats = CATEGORIAS_GASTOS if tipo.upper() == 'GASTO' else CATEGORIAS_INGRESOS
+        if cat_key in cats:
+            return cats[cat_key]['nombre']   # 'Comida', 'Hogar', etc.
+    except Exception:
+        pass
+    # Fallback simple
+    return cat_key.replace('_', ' ').capitalize()
 
 
 # ====================== HANDLERS ======================
@@ -65,7 +82,8 @@ async def ia_procesar_mensaje(update: Update, context: ContextTypes.DEFAULT_TYPE
     context.user_data['ia_usuario_username'] = usuario.username
 
     tipo = deteccion.get('tipo', 'GASTO')
-    categoria = deteccion.get('categoria', 'otros')
+    cat_key = deteccion.get('categoria', 'otros')
+    cat_nombre = _resolver_categoria_nombre(cat_key, tipo)   # nombre real del DB
     monto = deteccion.get('monto')
     confianza = deteccion.get('confianza', 'baja')
 
@@ -76,7 +94,7 @@ async def ia_procesar_mensaje(update: Update, context: ContextTypes.DEFAULT_TYPE
     texto_conf = (
         f"{emoji_conf} *Detección automática:*\n\n"
         f"{tipo_emoji} Tipo: *{tipo}*\n"
-        f"📂 Categoría: *{categoria}*\n"
+        f"📂 Categoría: *{cat_nombre}*\n"
         f"💵 Monto: *{'$' + str(monto) if monto else 'No detectado'}* ARS\n"
         f"🎯 Confianza: *{confianza.title()}*\n\n"
         f"¿Guardamos este registro?"
@@ -114,7 +132,8 @@ async def ia_confirmar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mensaje_original = context.user_data.get('ia_mensaje_original', '')
 
     tipo = deteccion.get('tipo', 'GASTO')
-    categoria = deteccion.get('categoria', 'Otros').capitalize()
+    cat_key = deteccion.get('categoria', 'otros')
+    cat_nombre = _resolver_categoria_nombre(cat_key, tipo)   # nombre real del DB
     monto_raw = deteccion.get('monto') or 0
     monto = float(monto_raw)
 
@@ -122,16 +141,16 @@ async def ia_confirmar(update: Update, context: ContextTypes.DEFAULT_TYPE):
         obtener_o_crear_usuario(usuario_id, nombre, username)
         registrar_gasto(
             usuario_id,
-            monto,           # siempre positivo, tipo indica dirección
-            categoria,
+            monto,
+            cat_nombre,      # nombre real del DB (ej: 'Comida', 'Hogar')
             mensaje_original,
             origen='Telegram',
-            tipo=tipo        # pasamos explícitamente GASTO o INGRESO
+            tipo=tipo
         )
         tipo_emoji = '💸' if tipo == 'GASTO' else '💰'
         await query.edit_message_text(
             f"✅ *¡Registrado con IA!*\n\n"
-            f"{tipo_emoji} {tipo}: *${abs(monto):.2f}* en *{categoria}*\n"
+            f"{tipo_emoji} {tipo}: *${abs(monto):.2f}* en *{cat_nombre}*\n"
             f"📝 _{mensaje_original}_",
             parse_mode="Markdown"
         )
