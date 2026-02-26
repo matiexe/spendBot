@@ -15,6 +15,7 @@ from handlers.gasto_handler import registrar_gasto_inicio, procesar_monto, proce
 from handlers.resumen_handler import resumen_hoy, resumen_mes, resumen_custom, ver_categorias
 from handlers.presupuesto_handler import presupuesto_inicio, procesar_categoria_presupuesto, procesar_monto_presupuesto, ver_presupuestos, cancelar_presupuesto, CAT_PRESUPUESTO, MONTO_PRESUPUESTO
 from handlers.stats_handler import stats
+from handlers.ia_handler import get_ia_conversation_handler
 from database import inicializar_bd, insertar_categorias_defecto
 
 logging.basicConfig(
@@ -65,6 +66,9 @@ def main():
         fallbacks=[CommandHandler("cancelar", cancelar_presupuesto)],
     )
     app.add_handler(conv_handler_presupuesto)
+    
+    # IA con Gemini: registrar gastos/ingresos en lenguaje natural
+    app.add_handler(get_ia_conversation_handler())
     
     app.add_error_handler(error_handler)
     

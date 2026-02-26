@@ -123,21 +123,25 @@ def obtener_o_crear_usuario(id_usuario, nombre, username):
 
 # ============= FUNCIONES DE GASTOS =============
 
-def registrar_gasto(id_usuario, monto, categoria, descripcion=''):
+def registrar_gasto(id_usuario, monto, categoria, descripcion='', origen='Telegram'):
     """Registra un nuevo gasto"""
     conn = sqlite3.connect(DATABASE_FILE)
     cursor = conn.cursor()
     
-    # Obtener ID de la categoría
+    # Obtener ID de la categoría (búsqueda case-insensitive)
     cursor.execute(
-        'SELECT id FROM categorias WHERE nombre = ?',
+        'SELECT id FROM categorias WHERE LOWER(nombre) = LOWER(?)',
         (categoria,)
     )
     result = cursor.fetchone()
     
     if not result:
-        conn.close()
-        raise ValueError(f"Categoría no encontrada: {categoria}")
+        # Fallback a la primera categoría disponible
+        cursor.execute('SELECT id FROM categorias LIMIT 1')
+        result = cursor.fetchone()
+        if not result:
+            conn.close()
+            raise ValueError(f"No hay categorías en la base de datos")
     
     categoria_id = result[0]
     
@@ -146,12 +150,12 @@ def registrar_gasto(id_usuario, monto, categoria, descripcion=''):
         '''INSERT INTO gastos 
            (id_usuario, monto, categoria_id, descripcion, fecha, cuenta, origen) 
            VALUES (?, ?, ?, ?, ?, ?, ?)''',
-        (id_usuario, monto, categoria_id, descripcion, datetime.now(), '-', 'Telegram')
+        (id_usuario, monto, categoria_id, descripcion, datetime.now(), '-', origen)
     )
     
     conn.commit()
     conn.close()
-    logger.info(f"Gasto registrado: {id_usuario} - ${monto} en {categoria}")
+    logger.info(f"Gasto registrado: {id_usuario} - ${monto} en {categoria} [{origen}]")
 
 def obtener_gastos_hoy(id_usuario):
     """Obtiene los gastos de hoy"""

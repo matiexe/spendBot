@@ -56,19 +56,24 @@ MENSAJES = {
 ¡Hola {nombre}! 👋
 
 Soy tu asistente de gastos. Aquí puedes:
-📝 Registrar tus gastos
+🤖 Registrar gastos con IA en lenguaje natural
+📝 Registrar tus gastos paso a paso
 📊 Ver resúmenes de gastos
 💰 Establecer presupuestos
 📈 Ver gráficos y estadísticas
 
-Usa /ayuda para más información.
+Usa /registrar para hablarle a la IA, o /ayuda para más opciones.
     """,
     
     'ayuda': """
 📚 COMANDOS DISPONIBLES:
 
-📝 Registrar Gastos:
-  /gasto - Registrar un nuevo gasto
+🤖 Registrar con IA (NUEVO):
+  /registrar - Describe tu gasto o ingreso en lenguaje natural
+  Ej: "Compré pizza por 4500"
+
+📝 Registrar Gastos (modo clásico):
+  /gasto - Registrar un nuevo gasto paso a paso
 
 📊 Ver Resúmenes:
   /resumen_hoy - Gastos de hoy
