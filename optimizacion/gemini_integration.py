@@ -86,6 +86,7 @@ class DetectorCategorias:
             tipo_detectado = self._detectar_tipo(mensaje)
             prompt          = generar_prompt_deteccion(mensaje, tipo=tipo_detectado)
             respuesta_texto = self._ask(prompt, max_tokens=1024)
+            logger.info(f"Respuesta raw Gemini: {respuesta_texto[:300]}")  # debug temporal
             resultado       = self._parsear_json(respuesta_texto)
             resultado['mensaje_original'] = mensaje   # disponible ANTES de validar
             resultado       = self._validar_resultado(resultado, tipo_detectado)
@@ -206,22 +207,94 @@ class DetectorCategorias:
                     return val
         return None
 
+    # Palabras que mapean a categorías cuando Gemini inventa nombres
+    _PALABRAS_CATEGORIA = {
+        # Comida
+        'comida': 'comida', 'alimento': 'comida', 'restaurante': 'comida',
+        'super': 'comida', 'supermercado': 'comida', 'mercado': 'comida',
+        'almuerzo': 'comida', 'cena': 'comida', 'desayuno': 'comida',
+        'pizza': 'comida', 'hamburguesa': 'comida', 'comestible': 'comida',
+        'verduleria': 'comida', 'carniceria': 'comida', 'panaderia': 'comida',
+        # Transporte
+        'transporte': 'transporte', 'taxi': 'transporte', 'uber': 'transporte',
+        'nafta': 'transporte', 'combustible': 'transporte', 'colectivo': 'transporte',
+        'subte': 'transporte', 'bus': 'transporte', 'estacionamiento': 'transporte',
+        # Salud
+        'salud': 'salud', 'farmacia': 'salud', 'medico': 'salud', 'dentista': 'salud',
+        'hospital': 'salud', 'clinica': 'salud', 'medicamento': 'salud',
+        # Hogar
+        'hogar': 'hogar', 'casa': 'hogar', 'alquiler': 'hogar', 'renta': 'hogar',
+        'luz': 'hogar', 'agua': 'hogar', 'gas': 'hogar', 'internet': 'hogar',
+        'limpieza': 'hogar', 'mantenimiento': 'hogar', 'mueble': 'hogar',
+        # Diversión
+        'diversion': 'diversion', 'entretenimiento': 'diversion', 'cine': 'diversion',
+        'bar': 'diversion', 'boliche': 'diversion', 'juego': 'diversion',
+        'salida': 'diversion', 'ocio': 'diversion', 'teatro': 'diversion',
+        # Ropa
+        'ropa': 'ropa', 'vestimenta': 'ropa', 'calzado': 'ropa', 'zapato': 'ropa',
+        'camisa': 'ropa', 'pantalon': 'ropa', 'zapatilla': 'ropa',
+        # Educación
+        'educacion': 'educacion', 'curso': 'educacion', 'libro': 'educacion',
+        'universidad': 'educacion', 'colegio': 'educacion', 'escuela': 'educacion',
+        # Deporte
+        'deporte': 'deporte', 'gimnasio': 'deporte', 'gym': 'deporte',
+        'futbol': 'deporte', 'natacion': 'deporte',
+        # Servicios
+        'servicio': 'servicios', 'servicio': 'servicios', 'suscripcion': 'suscripciones',
+        'streaming': 'suscripciones', 'netflix': 'suscripciones', 'spotify': 'suscripciones',
+        # Ingresos
+        'salario': 'salario', 'sueldo': 'salario', 'trabajo': 'salario',
+        'freelance': 'freelance', 'venta': 'venta', 'inversion': 'inversion',
+        'bonus': 'bonus', 'beca': 'beca', 'reembolso': 'reembolso',
+    }
+
+    def _buscar_categoria(self, cat_gemini: str, tipo: str) -> str:
+        """
+        Busca la key de categoría usando 3 niveles:
+        1. Key exacta ('comida')
+        2. Nombre exacto ('Comida')
+        3. Palabras clave (Gemini devuelve 'Supermercado' → 'comida')
+        """
+        import unicodedata
+        def normalizar(s):
+            s = s.lower().strip()
+            s = unicodedata.normalize('NFD', s)
+            s = ''.join(c for c in s if unicodedata.category(c) != 'Mn')
+            return s.replace(' ', '_')
+
+        cats = CATEGORIAS_GASTOS if tipo == 'GASTO' else CATEGORIAS_INGRESOS
+        val = cat_gemini.strip()
+        val_norm = normalizar(val)
+
+        # Nivel 1: key exacta
+        if val_norm in cats:
+            return val_norm
+
+        # Nivel 2: nombre exacto (case-insensitive, sin acentos)
+        for key, cat in cats.items():
+            if normalizar(cat['nombre']) == val_norm:
+                return key
+
+        # Nivel 3: palabras clave de la tabla interna
+        for palabra, key in self._PALABRAS_CATEGORIA.items():
+            if palabra in val_norm and key in cats:
+                return key
+
+        # Nivel 4: la palabra está contenida en algún nombre de categoría
+        for key, cat in cats.items():
+            if val_norm in normalizar(cat['nombre']) or normalizar(cat['nombre']) in val_norm:
+                return key
+
+        logger.warning(f"Categoría no reconocida: '{cat_gemini}' (tipo={tipo}) → fallback 'otros'")
+        return 'otros'
+
     def _validar_resultado(self, resultado: dict, tipo_detectado: str) -> dict:
         resultado['tipo'] = (resultado.get('tipo') or tipo_detectado).upper()
 
-        if resultado.get('categoria'):
-            cats = CATEGORIAS_GASTOS if resultado['tipo'] == 'GASTO' else CATEGORIAS_INGRESOS
-            cat_norm = resultado['categoria'].lower().replace(' ', '_')
-            if cat_norm not in cats:
-                for key, cat in cats.items():
-                    if cat['nombre'].lower() == resultado['categoria'].lower():
-                        cat_norm = key
-                        break
-                else:
-                    cat_norm = list(cats.keys())[-1]   # fallback 'otros'
-            resultado['categoria'] = cat_norm
-        else:
-            resultado['categoria'] = 'otros'
+        cat_raw = resultado.get('categoria') or ''
+        logger.debug(f"Categoría raw de Gemini: '{cat_raw}'")
+        resultado['categoria'] = self._buscar_categoria(cat_raw, resultado['tipo']) if cat_raw else 'otros'
+        logger.debug(f"Categoría resuelta: '{resultado['categoria']}'")
 
         # Parseo robusto del monto
         monto_parseado = self._parsear_monto(resultado.get('monto'))
