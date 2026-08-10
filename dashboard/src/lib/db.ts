@@ -52,6 +52,13 @@ export function getDb(): Database.Database {
         dbInstance.exec("ALTER TABLE usuarios ADD COLUMN token_vinculacion TEXT");
       }
 
+      // Auto-migración defensiva para la tabla gastos (columna 'tipo')
+      const columnsGastos = dbInstance.prepare("PRAGMA table_info(gastos)").all() as any[];
+      const colNamesGastos = columnsGastos.map(c => c.name);
+      if (!colNamesGastos.includes('tipo')) {
+        dbInstance.exec("ALTER TABLE gastos ADD COLUMN tipo TEXT DEFAULT 'GASTO'");
+      }
+
       // Tabla de transacciones recurrentes
       dbInstance.exec(`
         CREATE TABLE IF NOT EXISTS transacciones_recurrentes (

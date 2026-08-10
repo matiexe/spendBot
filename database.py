@@ -56,6 +56,7 @@ def inicializar_bd():
         CREATE TABLE IF NOT EXISTS gastos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             id_usuario INTEGER NOT NULL,
+            tipo TEXT DEFAULT 'GASTO',
             monto REAL NOT NULL,
             categoria_id INTEGER NOT NULL,
             descripcion TEXT,
@@ -66,6 +67,12 @@ def inicializar_bd():
             FOREIGN KEY (categoria_id) REFERENCES categorias(id)
         )
     ''')
+
+    # Migración defensiva para agregar la columna 'tipo' si no existía en bases creadas anteriormente
+    cursor.execute("PRAGMA table_info(gastos)")
+    cols_gastos = [c[1] for c in cursor.fetchall()]
+    if 'tipo' not in cols_gastos:
+        cursor.execute("ALTER TABLE gastos ADD COLUMN tipo TEXT DEFAULT 'GASTO'")
     
     # Tabla de presupuestos
     cursor.execute('''
