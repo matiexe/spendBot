@@ -44,6 +44,28 @@ export default function DashboardClient({ data }: { data: any }) {
     }).format(amount);
   };
 
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '-';
+    try {
+      const datePart = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr.split(' ')[0];
+      if (datePart) {
+        const parts = datePart.split('-');
+        if (parts.length === 3) {
+          const [, month, day] = parts;
+          const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+          const monthIdx = parseInt(month, 10) - 1;
+          if (monthIdx >= 0 && monthIdx < 12) {
+            return `${parseInt(day, 10)} ${months[monthIdx]}`;
+          }
+        }
+      }
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('es-AR', { month: 'short', day: 'numeric' });
+    } catch {
+      return dateStr;
+    }
+  };
+
   if (!isMounted) return null;
 
 
@@ -203,13 +225,7 @@ export default function DashboardClient({ data }: { data: any }) {
                     </span>
                   </td>
                   <td className="desc-cell">{gasto.descripcion || '-'}</td>
-                  <td className="date-cell">{new Date(gasto.fecha).toLocaleDateString('es-AR', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}</td>
+                  <td className="date-cell" suppressHydrationWarning>{formatDate(gasto.fecha)}</td>
                   <td className="amount-cell">{formatCurrency(gasto.monto)}</td>
                 </tr>
               ))}

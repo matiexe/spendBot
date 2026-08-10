@@ -1,97 +1,84 @@
-# 💸 Bot de Gastos Telegram + Dashboard
+# ⚡ SpendBot Suite
 
-![Banner](https://via.placeholder.com/800x200/0f1015/6366f1?text=Telegram+Expense+Bot+%2B+Dashboard)
+> **Gestor Inteligente de Finanzas Personales Multiusuario** con Bot de Telegram (Gemini AI NLP) y Dashboard Web en Tiempo Real.
 
-Un sistema integral "monorepo" diseñado para el registro rápido de tus gastos diarios directamente desde Telegram, acompañado de un Dashboard analítico premium web desarrollado en Next.js. El proyecto se basa en una base de datos local SQLite eficiente y veloz.
-
-## 🌟 Características
-
-### 🤖 Bot de Telegram (Backend Python)
-*   **Comandos Intuitivos:** Registra gastos, categorías e historial con comandos directos de chat.
-*   **Emojis Integrados:** Visualiza tus gastos con emojis descriptivos basados en las categorías (ej: `🍔 Comida`).
-*   **Gestión Rápida de Presupuestos:** Configura límites para no exceder tus transacciones en una categoría.
-*   **Extremadamente Rápido:** Basado en la librería `python-telegram-bot` y consultas SQLite seguras.
-
-### 📊 Dashboard Analítico (Frontend React / Next.js)
-*   **UI/UX Premium:** Interfaz oscura, esquema de colores vibrantes y Glassmorphism integrado (transparencia de cristal).
-*   **Métricas Dinámicas en Vivo:** Consulta instantánea sin APIs de terceros de tu total de gastos históricos y del mes.
-*   **Gráficos Estilizados:** Utilizando la librería `recharts` visualizamos la distribución de capital (gráficos de dona y barra).
-*   **Server-Side Rendering:** Carga inmediata gracias a la integración nativa y renderizado por Next.js App Router (v15).
-
-## 🛠️ Tecnologías
-
-*   **Lenguajes:** Python 3.10+ | TypeScript / Node.js
-*   **Bot API:** `python-telegram-bot`
-*   **Web Framework:** Next.js (React 19)
-*   **Base de Datos:** SQLite3 (con acceso desde backend y unificación con Next.js usando `better-sqlite3`)
-*   **Estilos:** CSS Vanilla puro (con variables y tokens globales)
+![SpendBot Preview](dashnuevo.png)
 
 ---
 
-## 🚀 Guía de Instalación
+## 🚀 Características Principales
 
-Al ser una arquitectura monorepo, existen dos sistemas interconectados:
+- 🤖 **Bot de Telegram con Inteligencia Artificial:** Registrá tus gastos diarios en lenguaje natural (ej: *"Gasté 4500 en la merienda"* o *"Mercado 12500 con tarjeta"*). Utiliza Google Gemini NLP para categorizar e interpretar los datos automáticamente.
+- 🔗 **Sistema de Vinculación Seguro (`/start VIN-XXXX`):** Cada usuario registrado en la web recibe un código único para vincular su cuenta de Telegram de forma rápida y aislada.
+- 👥 **Entorno Multiusuario Aislado:** Múltiples usuarios pueden registrar sus cuentas, ver sus propios balances y gestionar sus gastos sin interferencias.
+- 📊 **Dashboard Web Financiero:**
+  - Control de Balance total y mensual en pesos argentinos (ARS).
+  - Gráfico interactivo de rendimiento mensual (perspectiva 13 meses).
+  - Historial completo con filtros por fecha, tipo (gasto/ingreso) y categorías.
+  - Programación de **Transacciones Recurrentes** (gastos fijos, servicios, préstamos).
+- 🎨 **Diseño Moderno y Responsivo:** Construido con Tailwind CSS v4, componentes glassmorphism, modo oscuro sofisticado e interfaz fluida en móviles y escritorio.
 
-### 1. Requisitos Previos
-*   Python 3.10 o superior instalado.
-*   Node.js v18.x o superior.
-*   Tu Token de Telegram Bot (obtenido a través de @BotFather)
+---
 
-### 2. Levantar el Bot (Python)
+## 🛠️ Tecnologías Utilizadas
 
+- **Frontend / Dashboard:** Next.js 16 (App Router), React 19, Tailwind CSS v4, Lucide Icons.
+- **Backend / Telegram Bot:** Python 3.11, `python-telegram-bot`, Google Gemini API.
+- **Base de Datos:** SQLite (`better-sqlite3` en Node.js / `sqlite3` en Python).
+- **Despliegue & Contenedor:** Docker, Dockerfile multi-stage, Docker Compose.
+
+---
+
+## 💻 Instalación y Uso Local
+
+### 1. Clonar el repositorio
 ```bash
-# Entrar a la raíz
-cd botDegastosTelegram
+git clone https://github.com/matiexe/spendBot.git
+cd spendBot
+```
 
-# Instalar las dependencias del bot
+### 2. Configurar Variables de Entorno
+Copiá la plantilla `.env.example` a `.env`:
+```bash
+cp .env.example .env
+```
+Completá tus credenciales en `.env`:
+```env
+TELEGRAM_BOT_TOKEN=tu_token_de_telegram
+GEMINI_API_KEY=tu_api_key_de_gemini
+SESSION_SECRET=secreto_para_cookies
+PORT=3001
+```
+
+### 3. Ejecutar el Bot de Telegram (Python)
+```bash
+python -m venv .venv
+source .venv/bin/activate # En Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-
-# Copiar el archivo de entornos si lo tienes respaldado 
-# (Requiere de TOKEN y permisos)
-# Configura un archivo `.env` en base a la configuración que utilices.
-
-# Ejecutar el servicio
 python main.py
 ```
 
-### 3. Levantar el Dashboard Analítico (Web)
-
-Abre una **nueva ventana/pestaña** en tu terminal.
-
+### 4. Ejecutar el Dashboard Web (Next.js)
 ```bash
-# Entrar a la carpeta del dashboard
-cd botDegastosTelegram/dashboard
-
-# Instalar los paquetes npm (React, Next, Recharts, better-sqlite3)
+cd dashboard
 npm install
-
-# Para ejecutar un servidor de desarrollo local
 npm run dev
-
-# (Opcional) Compilar para producción (Recomendado para servidores reales)
-npm run build
-npm run start
 ```
-Una vez levantado ingresar en el puerto asignado por Node, por defecto: `http://localhost:3000`
+Abrí [http://localhost:3001](http://localhost:3001) en tu navegador.
 
 ---
 
-## 🗃️ Estructura de Proyecto
+## ☁️ Despliegue en Producción (Railway / Render con Docker)
 
-```text
-📁 botDegastosTelegram
- ├── 📄 main.py               # Punto de entrada y configuraciones del Bot
- ├── 📄 database.py           # Gestor con sqlite3 directo (Esquemas)
- ├── 📁 handlers/             # Funciones para procesar comandos (/start, /resumen)
- ├── 📁 utils/                # Utilidades y validaciones
- ├── 📄 gastos.db             # El archivo consolidado de tu BD SQLite 🔥
- |
- └── 📁 dashboard             # Aplicación Monorepo UI Web
-      ├── 📁 src/app          # Páginas, layout y CSS premium Next.js 15
-      ├── 📁 src/components   # Componente DashboardClient (Gráficos)
-      └── 📁 src/lib/db.ts    # Controlador better-sqlite3 de sólo lectura
-```
+El proyecto incluye un `Dockerfile` optimizado y el script `start.sh` para empaquetar tanto el Bot de Telegram como el Dashboard Web en un solo contenedor con soporte para **Volumen Persistente** de SQLite.
 
-## 🔐 Seguridad y Notas
-*   **Modo Sólo Lectura en Web:** El dashboard está configurado para acceder a `gastos.db` en modo `{ readonly: true }`. Las inserciones, actualizaciones o mutaciones las hace únicamente el bot para mantener la integridad transaccional de SQLite.
-*   **Base centralizada:** El archivo `gastos.db` es ignorado de Git (`.gitignore`) para evitar subir tu control financiero personal a tu sistema de control de versiones.
+1. Conectá el repositorio en **Railway** o **Render**.
+2. Seleccioná despliegue mediante **Dockerfile**.
+3. Añadí las variables de entorno (`TELEGRAM_BOT_TOKEN`, `GEMINI_API_KEY`, `SESSION_SECRET`).
+4. Asigná un **Volumen Persistente** montado en la raíz del proyecto para asegurar que `gastos.db` conserve los datos de los usuarios.
+
+---
+
+## 📄 Licencia
+
+Este proyecto está distribuido bajo la licencia MIT.

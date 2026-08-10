@@ -16,7 +16,9 @@ from handlers.resumen_handler import resumen_hoy, resumen_mes, resumen_custom, v
 from handlers.presupuesto_handler import presupuesto_inicio, procesar_categoria_presupuesto, procesar_monto_presupuesto, ver_presupuestos, cancelar_presupuesto, CAT_PRESUPUESTO, MONTO_PRESUPUESTO
 from handlers.stats_handler import stats
 from handlers.ia_handler import get_ia_conversation_handler
-from database import inicializar_bd, insertar_categorias_defecto
+from handlers.recurrente_handler import ver_recurrentes, callback_recurrente_actions, get_recurrente_conversation_handler
+from telegram.ext import CallbackQueryHandler
+from database import inicializar_bd, insertar_categorias_defecto, procesar_transacciones_recurrentes_pendientes
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -27,6 +29,11 @@ logger = logging.getLogger(__name__)
 def main():
     inicializar_bd()
     insertar_categorias_defecto()
+    
+    # Procesar transacciones recurrentes pendientes al arrancar
+    n_proc = procesar_transacciones_recurrentes_pendientes()
+    if n_proc > 0:
+        logger.info(f"Se procesaron {n_proc} transacciones recurrentes pendientes al inicio.")
     
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     
@@ -40,9 +47,14 @@ def main():
     app.add_handler(CommandHandler("resumen_mes", resumen_mes))
     app.add_handler(CommandHandler("resumen", resumen_custom))
     
-    # Stats
+    # Stats y Presupuestos
     app.add_handler(CommandHandler("stats", stats))
     app.add_handler(CommandHandler("presupuestos", ver_presupuestos))
+    
+    # Transacciones Recurrentes
+    app.add_handler(CommandHandler("recurrentes", ver_recurrentes))
+    app.add_handler(CallbackQueryHandler(callback_recurrente_actions, pattern="^(toggle_rec_|del_rec_|nueva_recurrente_start)"))
+    app.add_handler(get_recurrente_conversation_handler())
     
     # Gasto Conversation
     conv_handler_gasto = ConversationHandler(

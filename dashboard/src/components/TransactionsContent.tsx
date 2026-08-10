@@ -1,131 +1,177 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import TransactionsTable from '@/components/TransactionsTable';
 import TransactionForm from '@/components/TransactionForm';
-import { Plus, Wallet, ArrowDownCircle, ArrowUpCircle, PieChart } from 'lucide-react';
+import RecurringTransactionsView from '@/components/RecurringTransactionsView';
+import { Plus, Wallet, ArrowDownCircle, ArrowUpCircle, PieChart, History, Repeat } from 'lucide-react';
 
 interface TransactionsContentProps {
-    initialData: any;
-    categories: any[];
+  initialData: any;
+  categories: any[];
 }
 
 export default function TransactionsContent({ initialData, categories }: TransactionsContentProps) {
-    const [isMounted, setIsMounted] = React.useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
-    React.useEffect(() => {
-        setIsMounted(true);
-    }, []);
+  const tabParam = searchParams.get('tab') || 'historial';
+  const [activeTab, setActiveTab] = useState<'historial' | 'recurrentes'>(
+    tabParam === 'recurrentes' ? 'recurrentes' : 'historial'
+  );
 
-    const [data, setData] = useState(initialData);
-    const [showModal, setShowModal] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
-    const refreshData = async () => {
-        const res = await fetch('/api/transactions');
-        const result = await res.json();
-        if (result.success) {
-            setData({ ...data, recent: result.data });
-        }
-    };
+  useEffect(() => {
+    if (tabParam === 'recurrentes') {
+      setActiveTab('recurrentes');
+    } else {
+      setActiveTab('historial');
+    }
+  }, [tabParam]);
 
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('es-AR', {
-            style: 'currency',
-            currency: 'ARS',
-            maximumFractionDigits: 0
-        }).format(amount);
-    };
+  const handleTabChange = (tab: 'historial' | 'recurrentes') => {
+    setActiveTab(tab);
+    if (tab === 'recurrentes') {
+      router.push('/transactions?tab=recurrentes');
+    } else {
+      router.push('/transactions');
+    }
+  };
 
-    const balance = data.recent.reduce((acc: number, t: any) => acc + t.monto, 0);
-    const totalGastos = data.recent.reduce((acc: number, t: any) => t.monto < 0 ? acc + t.monto : acc, 0);
-    const totalIngresos = data.recent.reduce((acc: number, t: any) => t.monto > 0 ? acc + t.monto : acc, 0);
+  const [data, setData] = useState(initialData);
+  const [showModal, setShowModal] = useState(false);
 
-    if (!isMounted) return null;
+  const refreshData = async () => {
+    const res = await fetch('/api/transactions');
+    const result = await res.json();
+    if (result.success) {
+      setData({ ...data, recent: result.data });
+    }
+  };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
 
-    return (
-        <div className="dashboard-container">
-            <header className="header glass-panel">
-                <div>
-                    <h1 className="text-gradient">Transacciones</h1>
-                    <p className="subtitle">Historial de gastos e ingresos</p>
-                </div>
-                <div className="header-actions">
-                    <button
-                        onClick={() => setShowModal(true)}
-                        className="glass-panel"
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            background: 'var(--primary)',
-                            color: '#fff',
-                            border: 'none',
-                            padding: '0.75rem 1.5rem',
-                            borderRadius: '12px',
-                            fontWeight: 600,
-                            cursor: 'pointer'
-                        }}
-                    >
-                        <Plus size={18} /> Nueva Transacción
-                    </button>
-                </div>
-            </header>
+  const balance = data.recent.reduce((acc: number, t: any) => acc + t.monto, 0);
+  const totalGastos = data.recent.reduce((acc: number, t: any) => t.monto < 0 ? acc + t.monto : acc, 0);
+  const totalIngresos = data.recent.reduce((acc: number, t: any) => t.monto > 0 ? acc + t.monto : acc, 0);
 
-            <div className="metrics-grid">
-                <div className="metric-card glass-panel">
-                    <div className="metric-icon primary-bg">
-                        <Wallet size={24} />
-                    </div>
-                    <div className="metric-content">
-                        <h3>Balance</h3>
-                        <p className="metric-value balance">{formatCurrency(balance)}</p>
-                    </div>
-                </div>
+  if (!isMounted) return null;
 
-                <div className="metric-card glass-panel">
-                    <div className="metric-icon secondary-bg">
-                        <ArrowDownCircle size={24} />
-                    </div>
-                    <div className="metric-content">
-                        <h3>Gastos</h3>
-                        <p className="metric-value gastos">{formatCurrency(totalGastos)}</p>
-                    </div>
-                </div>
+  return (
+    <div className="space-y-6">
+      {/* Header Principal de la Vista */}
+      <header className="dash-card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+        <div>
+          <h1 className="text-gradient font-black text-2xl sm:text-3xl">Transacciones</h1>
+          <p className="subtitle text-sm text-[#8892b0] mt-1">Historial de gastos y programa de transacciones recurrentes</p>
+        </div>
 
-                <div className="metric-card glass-panel">
-                    <div className="metric-icon success-bg">
-                        <ArrowUpCircle size={24} />
-                    </div>
-                    <div className="metric-content">
-                        <h3>Ingresos</h3>
-                        <p className="metric-value ingresos">{formatCurrency(totalIngresos)}</p>
-                    </div>
-                </div>
+        {activeTab === 'historial' && (
+          <div className="header-actions">
+            <button
+              onClick={() => setShowModal(true)}
+              className="btn-primary"
+            >
+              <Plus size={18} /> Nueva Transacción
+            </button>
+          </div>
+        )}
+      </header>
 
-                <div className="metric-card glass-panel">
-                    <div className="metric-icon warning-bg">
-                        <PieChart size={24} />
-                    </div>
-                    <div className="metric-content">
-                        <h3>Top Categoría</h3>
-                        <p className="metric-value">
-                            {data.byCategory[0]?.emoji} {data.byCategory[0]?.nombre || 'Hogar'}
-                        </p>
-                        <span className="metric-subtitle">{formatCurrency(data.byCategory[0]?.total || 0)} total</span>
-                    </div>
-                </div>
+      {/* Pestañas de Sub-Navegación con Botones Nativo SpendBot */}
+      <div className="tab-nav">
+        <button
+          onClick={() => handleTabChange('historial')}
+          className={`tab-btn ${activeTab === 'historial' ? 'active' : ''}`}
+        >
+          <History size={18} />
+          <span>Historial de Transacciones</span>
+        </button>
+
+        <button
+          onClick={() => handleTabChange('recurrentes')}
+          className={`tab-btn ${activeTab === 'recurrentes' ? 'active' : ''}`}
+        >
+          <Repeat size={18} />
+          <span>Transacciones Recurrentes</span>
+        </button>
+      </div>
+
+      {/* Pestañas de Contenido */}
+      {activeTab === 'historial' ? (
+        <div>
+          <div className="metrics-grid">
+            <div className="metric-card glass-panel">
+              <div className="metric-icon primary-bg">
+                <Wallet size={24} />
+              </div>
+              <div className="metric-content">
+                <h3>Balance</h3>
+                <p className="metric-value">{formatCurrency(balance)}</p>
+              </div>
             </div>
 
-            <TransactionsTable transactions={data.recent} />
+            <div className="metric-card glass-panel">
+              <div className="metric-icon secondary-bg">
+                <ArrowDownCircle size={24} />
+              </div>
+              <div className="metric-content">
+                <h3>Gastos</h3>
+                <p className="metric-value monto-negativo">{formatCurrency(totalGastos)}</p>
+              </div>
+            </div>
 
-            {showModal && (
-                <TransactionForm
-                    categories={categories}
-                    onClose={() => setShowModal(false)}
-                    onSuccess={refreshData}
-                />
-            )}
+            <div className="metric-card glass-panel">
+              <div className="metric-icon success-bg">
+                <ArrowUpCircle size={24} />
+              </div>
+              <div className="metric-content">
+                <h3>Ingresos</h3>
+                <p className="metric-value monto-positivo">{formatCurrency(totalIngresos)}</p>
+              </div>
+            </div>
+
+            <div className="metric-card glass-panel">
+              <div className="metric-icon warning-bg">
+                <PieChart size={24} />
+              </div>
+              <div className="metric-content">
+                <h3>Top Categoría</h3>
+                <p className="metric-value">
+                  {data.byCategory[0]?.emoji} {data.byCategory[0]?.nombre || 'Hogar'}
+                </p>
+                <span className="metric-subtitle">{formatCurrency(data.byCategory[0]?.total || 0)} total</span>
+              </div>
+            </div>
+          </div>
+
+          <TransactionsTable transactions={data.recent} />
         </div>
-    );
+      ) : (
+        <RecurringTransactionsView
+          initialRecurrentes={data.recurrentes || []}
+          categories={categories}
+        />
+      )}
+
+      {showModal && (
+        <TransactionForm
+          categories={categories}
+          onClose={() => setShowModal(false)}
+          onSuccess={refreshData}
+        />
+      )}
+    </div>
+  );
 }

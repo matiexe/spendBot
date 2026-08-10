@@ -1,13 +1,22 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
-import Sidebar from '@/components/Sidebar';
 
-const inter = Inter({ subsets: ['latin'] });
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-jakarta',
+  display: 'swap',
+});
+
+const jetbrains = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-jetbrains',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
-  title: 'SpendBot Dashboard',
-  description: 'Financial dashboard for your Telegram Expense Bot',
+  title: 'SpendBot - Financial Suite',
+  description: 'Gestión inteligente de finanzas personales vía Telegram & Web',
 };
 
 export default function RootLayout({
@@ -16,15 +25,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <div className="layout-overlay" />
-        <div className="app-layout">
-          <Sidebar />
-          <main className="main-content">
-            {children}
-          </main>
-        </div>
+    <html lang="es" className={`${jakarta.variable} ${jetbrains.variable}`} suppressHydrationWarning>
+      <body className={jakarta.className} suppressHydrationWarning>
+        {children}
       </body>
     </html>
   );
