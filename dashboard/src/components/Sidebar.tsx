@@ -10,7 +10,8 @@ import {
   Wallet,
   Repeat,
   History,
-  ChevronDown
+  ChevronDown,
+  ShieldCheck
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -19,6 +20,7 @@ export default function Sidebar() {
   const currentTab = searchParams.get('tab') || 'historial';
 
   const isTransactionsRoute = pathname === '/transactions';
+  const isAdminRoute = pathname === '/admin';
   const [openSubmenu, setOpenSubmenu] = useState(true);
 
   return (
@@ -88,6 +90,17 @@ export default function Sidebar() {
                 </div>
               )}
             </div>
+          </li>
+
+          {/* Administración */}
+          <li>
+            <Link
+              href="/admin"
+              className={`nav-item ${isAdminRoute ? 'active' : ''}`}
+            >
+              <span className="nav-icon"><ShieldCheck size={20} className="text-indigo-400" /></span>
+              <span className="nav-text">Administración</span>
+            </Link>
           </li>
 
           {/* Configuración */}

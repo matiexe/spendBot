@@ -171,7 +171,7 @@ export function getDashboardData(userId?: number) {
   
   const firstDayThisMonth = new Date(year, month, 1).toISOString();
   const firstDayPrevMonth = new Date(year, month - 1, 1).toISOString();
-  const lastDayPrevMonth = new Date(year, month, 0, 23, 59, 59).toISOString();
+  const lastDayPrevMonth = new Date(year, month - 1, 0, 23, 59, 59).toISOString();
 
   // 4. Totales del mes actual y del mes anterior (filtrados por id_usuario)
   const totalMonthRow = userId
@@ -335,4 +335,49 @@ export function toggleRecurringTransaction(id: number) {
 export function deleteRecurringTransaction(id: number) {
   const db = getDb();
   return db.prepare('DELETE FROM transacciones_recurrentes WHERE id = ?').run(id);
+}
+
+export function getAdminStats() {
+  const db = getDb();
+
+  // 1. Obtener la lista completa de usuarios con sus métricas acumuladas
+  const users = db.prepare(`
+    SELECT 
+      u.id_usuario,
+      u.nombre,
+      u.email,
+      u.telegram_id,
+      u.token_vinculacion,
+      u.fecha_creacion,
+      COUNT(g.id) as totalTransacciones,
+      COALESCE(SUM(g.monto), 0) as totalGastos
+    FROM usuarios u
+    LEFT JOIN gastos g ON u.id_usuario = g.id_usuario
+    GROUP BY u.id_usuario
+    ORDER BY u.id_usuario DESC
+  `).all() as Array<{
+    id_usuario: number;
+    nombre: string;
+    email: string | null;
+    telegram_id: number | null;
+    token_vinculacion: string | null;
+    fecha_creacion: string;
+    totalTransacciones: number;
+    totalGastos: number;
+  }>;
+
+  // 2. Resumen general de la plataforma
+  const totalUsers = users.length;
+  const linkedUsers = users.filter(u => u.telegram_id !== null).length;
+
+  const platformTotalRow = db.prepare('SELECT COUNT(*) as count, COALESCE(SUM(monto), 0) as volumen FROM gastos').get() as { count: number; volumen: number };
+
+  return {
+    totalUsers,
+    linkedUsers,
+    unlinkedUsers: totalUsers - linkedUsers,
+    totalTransactions: platformTotalRow?.count || 0,
+    totalVolume: platformTotalRow?.volumen || 0,
+    users
+  };
 }
