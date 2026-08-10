@@ -7,18 +7,27 @@ export async function POST(request: Request) {
     const { nombre, email, password } = await request.json();
 
     if (!nombre || !email || !password) {
-      return NextResponse.json({ success: false, error: 'Todos los campos son requeridos' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Todos los campos son requeridos.' }, { status: 400 });
+    }
+
+    if (nombre.trim().length < 2) {
+      return NextResponse.json({ success: false, error: 'Ingresá tu nombre completo (mínimo 2 caracteres).' }, { status: 400 });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return NextResponse.json({ success: false, error: 'Ingresá un correo electrónico válido (ej: usuario@dominio.com).' }, { status: 400 });
     }
 
     if (password.length < 6) {
-      return NextResponse.json({ success: false, error: 'La contraseña debe tener al menos 6 caracteres' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'La contraseña debe tener al menos 6 caracteres.' }, { status: 400 });
     }
 
     const user = registerUser(nombre, email, password);
     const cookieStore = await cookies();
 
     // Guardar sesión en cookie segura HTTP-Only con sameSite lax
-    const sessionData = JSON.stringify({ userId: user.id_usuario, email: user.email, nombre: user.nombre });
+    const sessionData = JSON.stringify({ userId: user.id_usuario, email: user.email, nombre: user.nombre, rol: user.rol });
     cookieStore.set('spendbot_session', sessionData, {
       httpOnly: true,
       secure: false,

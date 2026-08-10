@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Wallet, UserPlus, ArrowLeft } from 'lucide-react';
+import { Wallet, UserPlus, ArrowLeft, AlertCircle } from 'lucide-react';
 
 export default function RegisterPage() {
   const [nombre, setNombre] = useState('');
@@ -41,14 +41,14 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-[#0b0c10]">
-      <div className="modal-content glass-panel max-w-md w-full !p-8">
+      <div className="modal-content glass-panel max-w-md w-full !p-8 shadow-2xl rounded-3xl border border-white/10">
         <div className="flex items-center justify-between mb-6">
           <Link href="/" className="text-[#8892b0] hover:text-white flex items-center gap-1.5 text-xs font-semibold">
             <ArrowLeft size={16} /> Volver al Inicio
           </Link>
 
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center shadow-md">
               <Wallet size={18} className="text-white" />
             </div>
             <span className="font-bold text-white tracking-wide">SpendBot</span>
@@ -93,12 +93,17 @@ export default function RegisterPage() {
             />
           </div>
 
-          {error && <div className="form-error">{error}</div>}
+          {error && (
+            <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold flex items-start gap-2.5 my-2">
+              <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
+          )}
 
           <button
             type="submit"
             disabled={loading}
-            className="btn-submit w-full justify-center !py-3.5 mt-2"
+            className="btn-submit w-full justify-center !py-3.5 mt-2 shadow-lg shadow-indigo-600/30"
           >
             {loading ? 'Creando cuenta...' : <><UserPlus size={18} /> Crear Mi Cuenta</>}
           </button>

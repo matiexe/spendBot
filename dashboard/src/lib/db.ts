@@ -99,13 +99,24 @@ export function hashPassword(password: string): string {
   return crypto.createHash('sha256').update(password).digest('hex');
 }
 
-export function registerUser(nombre: string, email: string, password_hash: string) {
+export function registerUser(nombre: string, email: string, plainPassword: string) {
   const db = getDb();
-  const existing = db.prepare('SELECT id_usuario FROM usuarios WHERE email = ?').get(email.toLowerCase().trim());
-  if (existing) {
-    throw new Error('El correo electrónico ya está registrado.');
+  const cleanEmail = email.toLowerCase().trim();
+  const cleanNombre = nombre.trim();
+
+  // Validar formato de correo electrónico
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(cleanEmail)) {
+    throw new Error('Por favor ingresá un correo electrónico válido (ej: usuario@dominio.com).');
   }
 
+  // Validar duplicado de correo electrónico (Case Insensitive)
+  const existing = db.prepare('SELECT id_usuario FROM usuarios WHERE LOWER(email) = ?').get(cleanEmail);
+  if (existing) {
+    throw new Error('El correo electrónico ya está registrado. Por favor iniciá sesión o probá con otro correo.');
+  }
+
+  const password_hash = hashPassword(plainPassword);
   const token_vinculacion = 'VIN-' + crypto.randomBytes(3).toString('hex').toUpperCase();
 
   const stmt = db.prepare(`
@@ -113,11 +124,11 @@ export function registerUser(nombre: string, email: string, password_hash: strin
     VALUES (?, ?, ?, ?, 'USER')
   `);
   
-  const result = stmt.run(nombre, email.toLowerCase().trim(), password_hash, token_vinculacion);
+  const result = stmt.run(cleanNombre, cleanEmail, password_hash, token_vinculacion);
   return {
     id_usuario: Number(result.lastInsertRowid),
-    nombre,
-    email,
+    nombre: cleanNombre,
+    email: cleanEmail,
     token_vinculacion,
     rol: 'USER'
   };
