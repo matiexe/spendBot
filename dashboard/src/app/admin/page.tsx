@@ -27,6 +27,11 @@ export default async function AdminPage() {
     redirect('/login');
   }
 
+  // Si un usuario común intenta acceder al panel de administración, redirigirlo a su Dashboard
+  if (user.rol !== 'ADMIN') {
+    redirect('/');
+  }
+
   const stats = getAdminStats();
 
   return (

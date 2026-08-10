@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { User } from '@/lib/db';
-import { LogOut, Send, CheckCircle2, Copy, Check, ChevronDown, User as UserIcon, AlertTriangle, Sparkles, ExternalLink, HelpCircle } from 'lucide-react';
+import { LogOut, Send, CheckCircle2, Copy, Check, ChevronDown, User as UserIcon, AlertTriangle, Sparkles, ExternalLink, HelpCircle, ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface UserHeaderBarProps {
@@ -26,6 +26,7 @@ export default function UserHeaderBar({ user, onOpenOnboarding }: UserHeaderBarP
   const token = user.token_vinculacion || 'VIN-0000';
   const linkCommand = `/start ${token}`;
   const directTelegramUrl = `https://t.me/${botUsername}?start=${token}`;
+  const isAdmin = user.rol === 'ADMIN';
 
   const copyCommand = () => {
     navigator.clipboard.writeText(linkCommand);
@@ -48,31 +49,40 @@ export default function UserHeaderBar({ user, onOpenOnboarding }: UserHeaderBarP
 
   return (
     <div className="w-full">
-      {/* Navbar Limpio sin Card Contenedora alrededor del Botón de Usuario */}
+      {/* Navbar Limpio */}
       <div className="w-full flex justify-between items-center relative z-40 py-1 px-1">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-[#818cf8] border border-indigo-500/30 flex items-center justify-center font-bold text-base shadow-sm">
-            <Sparkles size={18} />
+            {isAdmin ? <ShieldCheck size={20} className="text-indigo-400" /> : <Sparkles size={18} />}
           </div>
           <div>
-            <h2 className="text-base font-extrabold text-white leading-tight">SpendBot Suite</h2>
-            <span className="text-xs text-[#8892b0] font-mono">Entorno Multiusuario Aislado</span>
+            <h2 className="text-base font-extrabold text-white leading-tight">
+              SpendBot Suite {isAdmin && <span className="text-xs text-indigo-400 font-bold ml-2">(Admin)</span>}
+            </h2>
+            <span className="text-xs text-[#8892b0] font-mono">
+              {isAdmin ? 'Panel Global de Administración' : 'Entorno Multiusuario Aislado'}
+            </span>
           </div>
         </div>
 
-        {/* Sección Usuario con Avatar Circular y Menú Desplegable Limpio */}
+        {/* Sección Usuario con Avatar Circular y Menú Desplegable */}
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className="flex items-center gap-3.5 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/12 transition-all cursor-pointer group shadow-md backdrop-blur-md"
           >
             {/* Avatar Circular */}
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-black text-sm shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+            <div className={`w-10 h-10 rounded-full ${isAdmin ? 'bg-gradient-to-tr from-purple-600 to-indigo-600' : 'bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500'} flex items-center justify-center text-white font-black text-sm shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform`}>
               {initial}
             </div>
 
             <div className="hidden sm:block text-left pr-1">
-              <p className="text-xs font-bold text-white leading-tight">{user.nombre}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-bold text-white leading-tight">{user.nombre}</p>
+                {isAdmin && (
+                  <span className="text-[10px] bg-indigo-500/20 text-indigo-300 font-extrabold px-1.5 py-0.2 rounded border border-indigo-500/30">ADMIN</span>
+                )}
+              </div>
               <p className="text-[11px] text-[#8892b0] truncate max-w-[120px]">{user.email || 'Mi Cuenta'}</p>
             </div>
 
@@ -87,37 +97,44 @@ export default function UserHeaderBar({ user, onOpenOnboarding }: UserHeaderBarP
             <div className="dash-dropdown-menu animate-in fade-in zoom-in-95">
               {/* Card Perfil de Usuario */}
               <div className="p-4 rounded-xl bg-white/5 flex items-center gap-3.5 border border-white/5">
-                <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-base flex-shrink-0 shadow-md">
+                <div className={`w-11 h-11 rounded-full ${isAdmin ? 'bg-gradient-to-tr from-purple-600 to-indigo-600' : 'bg-gradient-to-tr from-indigo-500 to-purple-600'} flex items-center justify-center text-white font-bold text-base flex-shrink-0 shadow-md`}>
                   {initial}
                 </div>
                 <div className="min-w-0 overflow-hidden">
-                  <h4 className="text-sm font-bold text-white truncate">{user.nombre}</h4>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-white truncate">{user.nombre}</h4>
+                    {isAdmin && (
+                      <span className="text-[10px] bg-indigo-500/20 text-indigo-300 font-extrabold px-2 py-0.5 rounded border border-indigo-500/30">ADMIN</span>
+                    )}
+                  </div>
                   <p className="text-xs text-[#8892b0] truncate mt-0.5">{user.email || 'Sin email registrado'}</p>
                 </div>
               </div>
 
-              {/* Estado de Telegram */}
-              <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/5 flex flex-col gap-2">
-                <div className="text-[11px] uppercase font-extrabold tracking-wider text-[#8892b0]">
-                  Estado de Telegram
+              {/* Estado de Telegram (Solo para usuarios no admin) */}
+              {!isAdmin && (
+                <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/5 flex flex-col gap-2">
+                  <div className="text-[11px] uppercase font-extrabold tracking-wider text-[#8892b0]">
+                    Estado de Telegram
+                  </div>
+                  {user.telegram_id ? (
+                    <div className="flex items-center gap-2.5 text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-3 py-2 rounded-xl border border-emerald-500/20">
+                      <CheckCircle2 size={16} />
+                      <span>Vinculado (ID: {user.telegram_id})</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between text-xs text-amber-400 font-semibold bg-amber-500/10 px-3 py-2 rounded-xl border border-amber-500/20">
+                      <span className="flex items-center gap-2">
+                        <AlertTriangle size={15} />
+                        Sin vincular
+                      </span>
+                    </div>
+                  )}
                 </div>
-                {user.telegram_id ? (
-                  <div className="flex items-center gap-2.5 text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-3 py-2 rounded-xl border border-emerald-500/20">
-                    <CheckCircle2 size={16} />
-                    <span>Vinculado (ID: {user.telegram_id})</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between text-xs text-amber-400 font-semibold bg-amber-500/10 px-3 py-2 rounded-xl border border-amber-500/20">
-                    <span className="flex items-center gap-2">
-                      <AlertTriangle size={15} />
-                      Sin vincular
-                    </span>
-                  </div>
-                )}
-              </div>
+              )}
 
               {/* Botón Guía de Onboarding */}
-              {onOpenOnboarding && (
+              {onOpenOnboarding && !isAdmin && (
                 <button
                   onClick={() => {
                     setDropdownOpen(false);
@@ -134,36 +151,6 @@ export default function UserHeaderBar({ user, onOpenOnboarding }: UserHeaderBarP
 
               <div className="border-t border-white/10 my-0.5" />
 
-              {/* Botón Abrir Telegram Directo */}
-              {!user.telegram_id && (
-                <a
-                  href={directTelegramUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full text-left p-4 px-5 rounded-xl text-xs font-bold text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 transition-all flex items-center justify-between cursor-pointer shadow-sm"
-                >
-                  <span className="flex items-center gap-3">
-                    <Send size={16} className="text-cyan-400" />
-                    Abrir @{botUsername}
-                  </span>
-                  <ExternalLink size={15} />
-                </a>
-              )}
-
-              {/* Botón Copiar Comando con Padding Generoso */}
-              {!user.telegram_id && (
-                <button
-                  onClick={copyCommand}
-                  className="w-full text-left p-4 px-5 rounded-xl text-xs font-bold text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 transition-all flex items-center justify-between cursor-pointer shadow-sm"
-                >
-                  <span className="flex items-center gap-3">
-                    <Copy size={16} className="text-indigo-400" />
-                    Copiar comando /start
-                  </span>
-                  {copied ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
-                </button>
-              )}
-
               {/* Botón Cerrar Sesión */}
               <button
                 onClick={handleLogout}
@@ -177,8 +164,8 @@ export default function UserHeaderBar({ user, onOpenOnboarding }: UserHeaderBarP
         </div>
       </div>
 
-      {/* Alerta Destacada de Vinculación de Bot (Con Enlace Directo a Telegram) */}
-      {!user.telegram_id && (
+      {/* Alerta Destacada de Vinculación de Bot (Solo para usuarios normales) */}
+      {!user.telegram_id && !isAdmin && (
         <div className="dash-telegram-alert">
           <div className="flex items-start sm:items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center flex-shrink-0 shadow-lg">

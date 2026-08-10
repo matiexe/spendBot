@@ -15,14 +15,14 @@ export default function DashboardLayoutShell({ user, children }: DashboardLayout
   const [showWizard, setShowWizard] = useState(false);
 
   useEffect(() => {
-    // Si el usuario no está vinculado y no cerró explícitamente el onboarding antes
-    if (!user.telegram_id) {
+    // Si el usuario no está vinculado, no es ADMIN y no cerró explícitamente el onboarding antes
+    if (!user.telegram_id && user.rol !== 'ADMIN') {
       const dismissed = localStorage.getItem('spendbot_onboarding_dismissed');
       if (!dismissed) {
         setShowWizard(true);
       }
     }
-  }, [user.telegram_id]);
+  }, [user.telegram_id, user.rol]);
 
   const handleCloseWizard = () => {
     setShowWizard(false);
@@ -31,7 +31,7 @@ export default function DashboardLayoutShell({ user, children }: DashboardLayout
 
   return (
     <div className="app-layout">
-      <Sidebar />
+      <Sidebar user={user} />
       <main className="main-content">
         <div className="dashboard-container">
           <UserHeaderBar user={user} onOpenOnboarding={() => setShowWizard(true)} />
@@ -39,7 +39,7 @@ export default function DashboardLayoutShell({ user, children }: DashboardLayout
         </div>
       </main>
 
-      {showWizard && (
+      {showWizard && user.rol !== 'ADMIN' && (
         <OnboardingWizard user={user} onClose={handleCloseWizard} />
       )}
     </div>

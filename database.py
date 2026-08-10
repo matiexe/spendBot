@@ -16,7 +16,7 @@ def inicializar_bd():
     conn = sqlite3.connect(DATABASE_FILE)
     cursor = conn.cursor()
     
-    # Tabla de usuarios con campos para Registro Web + Telegram
+    # Tabla de usuarios con campos para Registro Web + Telegram + Rol
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS usuarios (
             id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,11 +26,12 @@ def inicializar_bd():
             password_hash TEXT,
             telegram_id INTEGER UNIQUE,
             token_vinculacion TEXT UNIQUE,
+            rol TEXT DEFAULT 'USER',
             fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
 
-    # Migración defensiva si la tabla existía con el esquema antiguo (sin UNIQUE en ADD COLUMN)
+    # Migración defensiva si la tabla existía con el esquema antiguo
     cursor.execute("PRAGMA table_info(usuarios)")
     columnas = [column[1] for column in cursor.fetchall()]
     if 'email' not in columnas:
@@ -41,6 +42,18 @@ def inicializar_bd():
         cursor.execute("ALTER TABLE usuarios ADD COLUMN telegram_id INTEGER")
     if 'token_vinculacion' not in columnas:
         cursor.execute("ALTER TABLE usuarios ADD COLUMN token_vinculacion TEXT")
+    if 'rol' not in columnas:
+        cursor.execute("ALTER TABLE usuarios ADD COLUMN rol TEXT DEFAULT 'USER'")
+
+    # Seeding automático de usuario administrador por defecto
+    import hashlib
+    admin_hash = hashlib.sha256('admin123'.encode('utf-8')).hexdigest()
+    cursor.execute("SELECT id_usuario FROM usuarios WHERE email = 'admin@spendbot.com'")
+    if not cursor.fetchone():
+        cursor.execute(
+            "INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES (?, ?, ?, ?)",
+            ('Administrador', 'admin@spendbot.com', admin_hash, 'ADMIN')
+        )
     
     # Tabla de categorías
     cursor.execute('''

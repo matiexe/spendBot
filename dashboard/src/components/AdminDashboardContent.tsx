@@ -13,7 +13,8 @@ import {
   Calendar,
   Sparkles,
   TrendingUp,
-  UserCheck
+  UserCheck,
+  Shield
 } from 'lucide-react';
 
 interface AdminDashboardContentProps {
@@ -29,6 +30,7 @@ interface AdminDashboardContentProps {
       email: string | null;
       telegram_id: number | null;
       token_vinculacion: string | null;
+      rol: string;
       fecha_creacion: string;
       totalTransacciones: number;
       totalGastos: number;
@@ -146,7 +148,7 @@ export default function AdminDashboardContent({ stats }: AdminDashboardContentPr
               <span>Usuarios Registrados y Correos</span>
             </h2>
             <p className="text-xs text-[#8892b0] mt-1">
-              Lista detallada de usuarios con correo electrónico, estado de Telegram y actividad
+              Lista detallada de usuarios con correo electrónico, rol, estado de Telegram y actividad
             </p>
           </div>
 
@@ -170,6 +172,7 @@ export default function AdminDashboardContent({ stats }: AdminDashboardContentPr
               <tr>
                 <th>Usuario</th>
                 <th>Correo Electrónico</th>
+                <th>Rol</th>
                 <th>Estado Telegram</th>
                 <th>Fecha Registro</th>
                 <th>Transacciones</th>
@@ -179,17 +182,20 @@ export default function AdminDashboardContent({ stats }: AdminDashboardContentPr
             <tbody>
               {filteredUsers.map((u) => {
                 const initial = u.nombre ? u.nombre.charAt(0).toUpperCase() : 'U';
+                const isAdmin = u.rol === 'ADMIN';
 
                 return (
                   <tr key={u.id_usuario}>
                     {/* Nombre y Avatar */}
                     <td>
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-xs shadow-md">
+                        <div className={`w-9 h-9 rounded-full ${isAdmin ? 'bg-gradient-to-tr from-purple-600 to-indigo-600' : 'bg-gradient-to-tr from-indigo-500 to-purple-600'} flex items-center justify-center text-white font-black text-xs shadow-md`}>
                           {initial}
                         </div>
                         <div>
-                          <p className="font-bold text-white text-xs">{u.nombre}</p>
+                          <p className="font-bold text-white text-xs flex items-center gap-1.5">
+                            <span>{u.nombre}</span>
+                          </p>
                           <p className="text-[10px] text-[#8892b0] font-mono">ID: #{u.id_usuario}</p>
                         </div>
                       </div>
@@ -205,9 +211,25 @@ export default function AdminDashboardContent({ stats }: AdminDashboardContentPr
                       </div>
                     </td>
 
+                    {/* Rol */}
+                    <td>
+                      {isAdmin ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-purple-300 bg-purple-500/20 px-2.5 py-0.5 rounded-full border border-purple-500/30 uppercase tracking-wider">
+                          <Shield size={12} />
+                          Admin
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center text-[11px] font-semibold text-[#8892b0] bg-white/5 px-2.5 py-0.5 rounded-full border border-white/10 uppercase tracking-wider">
+                          Usuario
+                        </span>
+                      )}
+                    </td>
+
                     {/* Estado de Telegram */}
                     <td>
-                      {u.telegram_id ? (
+                      {isAdmin ? (
+                        <span className="text-xs text-[#8892b0] italic">N/A (Admin)</span>
+                      ) : u.telegram_id ? (
                         <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20">
                           <CheckCircle2 size={14} />
                           <span>Vinculado ({u.telegram_id})</span>
@@ -244,7 +266,7 @@ export default function AdminDashboardContent({ stats }: AdminDashboardContentPr
 
               {filteredUsers.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="text-center py-10 text-[#8892b0] text-xs">
+                  <td colSpan={7} className="text-center py-10 text-[#8892b0] text-xs">
                     No se encontraron usuarios coincidentes con "{searchTerm}".
                   </td>
                 </tr>

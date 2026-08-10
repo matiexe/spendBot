@@ -11,6 +11,7 @@ export interface User {
   telegram_id?: number;
   token_vinculacion?: string;
   fecha_creacion?: string;
+  rol?: 'ADMIN' | 'USER';
 }
 
 export interface Expense {
@@ -50,6 +51,19 @@ export function getDb(): Database.Database {
       }
       if (!colNames.includes('token_vinculacion')) {
         dbInstance.exec("ALTER TABLE usuarios ADD COLUMN token_vinculacion TEXT");
+      }
+      if (!colNames.includes('rol')) {
+        dbInstance.exec("ALTER TABLE usuarios ADD COLUMN rol TEXT DEFAULT 'USER'");
+      }
+
+      // Seeding automático de cuenta Administrador
+      const adminExists = dbInstance.prepare("SELECT id_usuario FROM usuarios WHERE email = 'admin@spendbot.com'").get();
+      if (!adminExists) {
+        const adminPassHash = hashPassword('admin123');
+        dbInstance.prepare(`
+          INSERT INTO usuarios (nombre, email, password_hash, rol)
+          VALUES (?, ?, ?, ?)
+        `).run('Administrador', 'admin@spendbot.com', adminPassHash, 'ADMIN');
       }
 
       // Auto-migración defensiva para la tabla gastos (columna 'tipo')
@@ -95,8 +109,8 @@ export function registerUser(nombre: string, email: string, password_hash: strin
   const token_vinculacion = 'VIN-' + crypto.randomBytes(3).toString('hex').toUpperCase();
 
   const stmt = db.prepare(`
-    INSERT INTO usuarios (nombre, email, password_hash, token_vinculacion)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO usuarios (nombre, email, password_hash, token_vinculacion, rol)
+    VALUES (?, ?, ?, ?, 'USER')
   `);
   
   const result = stmt.run(nombre, email.toLowerCase().trim(), password_hash, token_vinculacion);
@@ -104,7 +118,8 @@ export function registerUser(nombre: string, email: string, password_hash: strin
     id_usuario: Number(result.lastInsertRowid),
     nombre,
     email,
-    token_vinculacion
+    token_vinculacion,
+    rol: 'USER'
   };
 }
 
@@ -112,7 +127,7 @@ export function loginUser(email: string, password: string) {
   const db = getDb();
   const password_hash = hashPassword(password);
   const user = db.prepare(`
-    SELECT id_usuario, nombre, email, password_hash, telegram_id, token_vinculacion
+    SELECT id_usuario, nombre, email, password_hash, telegram_id, token_vinculacion, COALESCE(rol, 'USER') as rol
     FROM usuarios WHERE email = ?
   `).get(email.toLowerCase().trim()) as any;
 
@@ -125,14 +140,15 @@ export function loginUser(email: string, password: string) {
     nombre: user.nombre,
     email: user.email,
     telegram_id: user.telegram_id,
-    token_vinculacion: user.token_vinculacion
+    token_vinculacion: user.token_vinculacion,
+    rol: user.rol as 'ADMIN' | 'USER'
   };
 }
 
 export function getUserById(id_usuario: number) {
   const db = getDb();
   return db.prepare(`
-    SELECT id_usuario, nombre, email, telegram_id, token_vinculacion, fecha_creacion
+    SELECT id_usuario, nombre, email, telegram_id, token_vinculacion, fecha_creacion, COALESCE(rol, 'USER') as rol
     FROM usuarios WHERE id_usuario = ?
   `).get(id_usuario) as User | undefined;
 }
@@ -348,6 +364,7 @@ export function getAdminStats() {
       u.email,
       u.telegram_id,
       u.token_vinculacion,
+      COALESCE(u.rol, 'USER') as rol,
       u.fecha_creacion,
       COUNT(g.id) as totalTransacciones,
       COALESCE(SUM(g.monto), 0) as totalGastos
@@ -361,6 +378,7 @@ export function getAdminStats() {
     email: string | null;
     telegram_id: number | null;
     token_vinculacion: string | null;
+    rol: string;
     fecha_creacion: string;
     totalTransacciones: number;
     totalGastos: number;

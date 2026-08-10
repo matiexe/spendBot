@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { getDashboardData, getUserById } from '@/lib/db';
 import FinancialPanel from '@/components/FinancialPanel';
 import LandingPage from '@/components/LandingPage';
@@ -25,6 +26,11 @@ export default async function Home() {
   const user = session?.userId ? getUserById(session.userId) : null;
   if (!user) {
     return <LandingPage />;
+  }
+
+  // Si el usuario es Administrador, redirigir ÚNICAMENTE al Panel de Administración
+  if (user.rol === 'ADMIN') {
+    redirect('/admin');
   }
 
   const data = getDashboardData(user.id_usuario);

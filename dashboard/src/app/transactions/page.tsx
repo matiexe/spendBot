@@ -27,6 +27,11 @@ export default async function TransactionsPage() {
     redirect('/login');
   }
 
+  // Si el usuario es Administrador, no tiene acceso a transacciones personales
+  if (user.rol === 'ADMIN') {
+    redirect('/admin');
+  }
+
   const data = getDashboardData(user.id_usuario);
   const categories = getCategories();
 
