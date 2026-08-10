@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { User } from '@/lib/db';
-import { LogOut, Send, CheckCircle2, Copy, Check, ChevronDown, User as UserIcon, AlertTriangle, Sparkles } from 'lucide-react';
+import { LogOut, Send, CheckCircle2, Copy, Check, ChevronDown, User as UserIcon, AlertTriangle, Sparkles, ExternalLink } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface UserHeaderBarProps {
@@ -21,7 +21,10 @@ export default function UserHeaderBar({ user }: UserHeaderBarProps) {
     router.refresh();
   };
 
-  const linkCommand = `/start ${user.token_vinculacion || 'VIN-0000'}`;
+  const botUsername = 'Contolgastos_bot';
+  const token = user.token_vinculacion || 'VIN-0000';
+  const linkCommand = `/start ${token}`;
+  const directTelegramUrl = `https://t.me/${botUsername}?start=${token}`;
 
   const copyCommand = () => {
     navigator.clipboard.writeText(linkCommand);
@@ -114,6 +117,22 @@ export default function UserHeaderBar({ user }: UserHeaderBarProps) {
 
               <div className="border-t border-white/10 my-0.5" />
 
+              {/* Botón Abrir Telegram Directo */}
+              {!user.telegram_id && (
+                <a
+                  href={directTelegramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full text-left p-4 px-5 rounded-xl text-xs font-bold text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 transition-all flex items-center justify-between cursor-pointer shadow-sm"
+                >
+                  <span className="flex items-center gap-3">
+                    <Send size={16} className="text-cyan-400" />
+                    Abrir @{botUsername}
+                  </span>
+                  <ExternalLink size={15} />
+                </a>
+              )}
+
               {/* Botón Copiar Comando con Padding Generoso */}
               {!user.telegram_id && (
                 <button
@@ -121,7 +140,7 @@ export default function UserHeaderBar({ user }: UserHeaderBarProps) {
                   className="w-full text-left p-4 px-5 rounded-xl text-xs font-bold text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 transition-all flex items-center justify-between cursor-pointer shadow-sm"
                 >
                   <span className="flex items-center gap-3">
-                    <Send size={16} className="text-cyan-400" />
+                    <Copy size={16} className="text-indigo-400" />
                     Copiar comando /start
                   </span>
                   {copied ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
@@ -141,7 +160,7 @@ export default function UserHeaderBar({ user }: UserHeaderBarProps) {
         </div>
       </div>
 
-      {/* Alerta Destacada de Vinculación de Bot */}
+      {/* Alerta Destacada de Vinculación de Bot (Con Enlace Directo a Telegram) */}
       {!user.telegram_id && (
         <div className="dash-telegram-alert">
           <div className="flex items-start sm:items-center gap-4">
@@ -154,15 +173,26 @@ export default function UserHeaderBar({ user }: UserHeaderBarProps) {
                 <span className="text-xs bg-amber-500/20 text-amber-300 font-bold px-3 py-0.5 rounded-full border border-amber-500/30">Acción Requerida</span>
               </h4>
               <p className="text-xs sm:text-sm text-[#8892b0] font-normal leading-relaxed">
-                Para registrar tus gastos por chat enviá este código a nuestro bot de Telegram:
+                Buscá a nuestro bot <strong className="text-cyan-400 font-bold">@{botUsername}</strong> en Telegram o enviá el comando de arriba:
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-white/10">
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-between sm:justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-white/10">
             <code className="font-mono text-xs sm:text-sm text-indigo-300 font-bold bg-black/60 px-5 py-3 rounded-xl border border-indigo-500/30 shadow-inner">
               {linkCommand}
             </code>
+
+            <a
+              href={directTelegramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-cyan-600 hover:bg-cyan-500 text-white text-xs sm:text-sm font-extrabold px-6 py-3 rounded-xl transition-all flex items-center gap-2.5 shadow-lg shadow-cyan-600/30 cursor-pointer hover:scale-105"
+            >
+              <Send size={16} />
+              <span>Abrir en Telegram</span>
+            </a>
+
             <button
               onClick={copyCommand}
               className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-extrabold px-6 py-3 rounded-xl transition-all flex items-center gap-2.5 shadow-lg shadow-indigo-600/30 cursor-pointer hover:scale-105"
