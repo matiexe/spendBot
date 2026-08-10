@@ -28,11 +28,13 @@ env/
 .env
 
 # Database
+gastos.db
 *.db
+!*.ts
+!*.tsx
 *.db-shm
 *.db-wal
 *.sqlite3
-gastos.db
 
 # Node / Next.js
 **/node_modules/
