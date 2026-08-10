@@ -14,9 +14,12 @@ export async function POST(request: Request) {
     const cookieStore = await cookies();
 
     const sessionData = JSON.stringify({ userId: user.id_usuario, email: user.email, nombre: user.nombre });
+    
+    // Cookie de sesión persistente con sameSite lax y path global /
     cookieStore.set('spendbot_session', sessionData, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Permite persistencia segura tanto en localhost como en proxies HTTP de Render/Railway
+      sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 30, // 30 días
       path: '/'
     });

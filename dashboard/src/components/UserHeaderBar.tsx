@@ -2,14 +2,15 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { User } from '@/lib/db';
-import { LogOut, Send, CheckCircle2, Copy, Check, ChevronDown, User as UserIcon, AlertTriangle, Sparkles, ExternalLink } from 'lucide-react';
+import { LogOut, Send, CheckCircle2, Copy, Check, ChevronDown, User as UserIcon, AlertTriangle, Sparkles, ExternalLink, HelpCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface UserHeaderBarProps {
   user: User;
+  onOpenOnboarding?: () => void;
 }
 
-export default function UserHeaderBar({ user }: UserHeaderBarProps) {
+export default function UserHeaderBar({ user, onOpenOnboarding }: UserHeaderBarProps) {
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -95,7 +96,7 @@ export default function UserHeaderBar({ user }: UserHeaderBarProps) {
                 </div>
               </div>
 
-              {/* Card Estado de Telegram */}
+              {/* Estado de Telegram */}
               <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/5 flex flex-col gap-2">
                 <div className="text-[11px] uppercase font-extrabold tracking-wider text-[#8892b0]">
                   Estado de Telegram
@@ -114,6 +115,22 @@ export default function UserHeaderBar({ user }: UserHeaderBarProps) {
                   </div>
                 )}
               </div>
+
+              {/* Botón Guía de Onboarding */}
+              {onOpenOnboarding && (
+                <button
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    onOpenOnboarding();
+                  }}
+                  className="w-full text-left p-3.5 px-4 rounded-xl text-xs font-bold text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 transition-all flex items-center justify-between cursor-pointer shadow-sm"
+                >
+                  <span className="flex items-center gap-3">
+                    <HelpCircle size={16} className="text-purple-400" />
+                    Guía de Inicio / Onboarding
+                  </span>
+                </button>
+              )}
 
               <div className="border-t border-white/10 my-0.5" />
 

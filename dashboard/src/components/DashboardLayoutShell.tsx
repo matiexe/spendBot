@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import UserHeaderBar from '@/components/UserHeaderBar';
+import OnboardingWizard from '@/components/OnboardingWizard';
 import { User } from '@/lib/db';
 
 interface DashboardLayoutShellProps {
@@ -11,15 +12,36 @@ interface DashboardLayoutShellProps {
 }
 
 export default function DashboardLayoutShell({ user, children }: DashboardLayoutShellProps) {
+  const [showWizard, setShowWizard] = useState(false);
+
+  useEffect(() => {
+    // Si el usuario no está vinculado y no cerró explícitamente el onboarding antes
+    if (!user.telegram_id) {
+      const dismissed = localStorage.getItem('spendbot_onboarding_dismissed');
+      if (!dismissed) {
+        setShowWizard(true);
+      }
+    }
+  }, [user.telegram_id]);
+
+  const handleCloseWizard = () => {
+    setShowWizard(false);
+    localStorage.setItem('spendbot_onboarding_dismissed', 'true');
+  };
+
   return (
     <div className="app-layout">
       <Sidebar />
       <main className="main-content">
         <div className="dashboard-container">
-          <UserHeaderBar user={user} />
+          <UserHeaderBar user={user} onOpenOnboarding={() => setShowWizard(true)} />
           {children}
         </div>
       </main>
+
+      {showWizard && (
+        <OnboardingWizard user={user} onClose={handleCloseWizard} />
+      )}
     </div>
   );
 }

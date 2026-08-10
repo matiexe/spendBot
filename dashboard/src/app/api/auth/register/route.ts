@@ -17,11 +17,12 @@ export async function POST(request: Request) {
     const user = registerUser(nombre, email, password);
     const cookieStore = await cookies();
 
-    // Guardar sesión en cookie segura HTTP-Only
+    // Guardar sesión en cookie segura HTTP-Only con sameSite lax
     const sessionData = JSON.stringify({ userId: user.id_usuario, email: user.email, nombre: user.nombre });
     cookieStore.set('spendbot_session', sessionData, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false,
+      sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 30, // 30 días
       path: '/'
     });
