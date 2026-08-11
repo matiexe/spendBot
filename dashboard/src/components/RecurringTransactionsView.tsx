@@ -267,9 +267,9 @@ export default function RecurringTransactionsView({
                       {durStr}
                     </span>
 
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: isActivo ? '#10b981' : '#f59e0b', fontWeight: 600 }}>
-                      {isActivo ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-                      {isActivo ? 'Activa' : 'Pausada'}
+                    <span className="dash-badge text-xs font-semibold !rounded-full" style={{ background: isActivo ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)', color: isActivo ? '#10b981' : '#f59e0b', border: isActivo ? '1px solid rgba(16, 185, 129, 0.25)' : '1px solid rgba(245, 158, 11, 0.25)' }}>
+                      {isActivo ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
+                      <span>{isActivo ? 'Activa' : 'Pausada'}</span>
                     </span>
                   </div>
                 </div>

@@ -153,7 +153,7 @@ export default function FinancialPanel({ data }: FinancialPanelProps) {
                 </span>
                 
                 {percentChangeVal !== 0 && (
-                  <span className={`inline-flex items-center gap-1 px-3.5 py-1 rounded-full text-xs font-bold ${percentChangeVal >= 0 ? 'bg-[#10b981]/15 text-[#10b981] border border-[#10b981]/30' : 'bg-[#ef4444]/15 text-[#ef4444] border border-[#ef4444]/30'}`}>
+                  <span className={`inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold leading-none ${percentChangeVal >= 0 ? 'bg-[#10b981]/15 text-[#10b981] border border-[#10b981]/30' : 'bg-[#ef4444]/15 text-[#ef4444] border border-[#ef4444]/30'}`}>
                     ↗ {percentChangeVal >= 0 ? `+${percentChangeVal}%` : `${percentChangeVal}%`}
                   </span>
                 )}
@@ -175,7 +175,7 @@ export default function FinancialPanel({ data }: FinancialPanelProps) {
               <div className="absolute top-[52%] left-0 right-0 border-b border-dashed border-white/10 z-0" />
 
               {totalHistoricalVal > 0 && (
-                <div className="absolute top-[38%] right-0 transform translate-y-[-50%] bg-[#ef4444]/20 border border-[#ef4444]/40 text-[#ef4444] text-[10px] sm:text-xs font-mono font-semibold px-2.5 py-1 rounded-lg shadow-lg backdrop-blur-md z-20">
+                <div className="absolute top-[38%] right-0 transform translate-y-[-50%] bg-[#ef4444]/20 border border-[#ef4444]/40 text-[#ef4444] text-[10px] sm:text-xs font-mono font-semibold px-3 py-1.5 rounded-lg shadow-lg backdrop-blur-md z-20 inline-flex items-center justify-center leading-none">
                   -{formatCurrency(totalHistoricalVal).split(',')[0]}
                 </div>
               )}

@@ -39,7 +39,7 @@ export default function Sidebar({ user }: SidebarProps) {
         <div>
           <h2>SpendBot</h2>
           {isAdmin && (
-            <span className="text-[10px] bg-indigo-500/20 text-indigo-300 font-extrabold px-2 py-0.5 rounded-md border border-indigo-500/30 uppercase tracking-wider">
+            <span className="dash-badge text-[10px] bg-indigo-500/20 text-indigo-300 font-extrabold !rounded-md border border-indigo-500/30 uppercase tracking-wider">
               Panel Admin
             </span>
           )}

@@ -1,22 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { User } from '@/lib/db';
-import {
-  Sparkles,
-  Send,
-  CheckCircle2,
-  Copy,
-  Check,
-  ArrowRight,
-  ArrowLeft,
-  X,
-  Bot,
-  Zap,
-  ShieldCheck,
-  ExternalLink,
-  MessageSquare
-} from 'lucide-react';
+import { Send, CheckCircle2, Copy, Check, Sparkles, X, ArrowRight, ArrowLeft, Bot, ShieldCheck, ExternalLink } from 'lucide-react';
 
 interface OnboardingWizardProps {
   user: User;
@@ -38,6 +24,11 @@ export default function OnboardingWizard({ user, onClose }: OnboardingWizardProp
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleFinish = () => {
+    localStorage.setItem('spendbot_onboarding_dismissed', 'true');
+    if (onClose) onClose();
+  };
+
   return (
     <div className="modal-overlay animate-in fade-in duration-200">
       <div className="modal-content max-w-xl relative p-6 sm:p-8 bg-[#12141d] border border-white/15 rounded-3xl shadow-2xl backdrop-blur-2xl">
@@ -54,7 +45,7 @@ export default function OnboardingWizard({ user, onClose }: OnboardingWizardProp
         {/* Header con Barra de Progreso de Pasos */}
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest">
+            <span className="dash-badge text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest bg-indigo-500/10 !rounded-full border border-indigo-500/20">
               Paso {step} de 3
             </span>
             <span className="text-xs text-[#8892b0]">• Guía de Inicio Rápido</span>
@@ -133,7 +124,7 @@ export default function OnboardingWizard({ user, onClose }: OnboardingWizardProp
             <div className="p-5 rounded-2xl bg-gradient-to-r from-indigo-500/15 via-purple-500/10 to-pink-500/15 border border-indigo-500/30 space-y-4">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs font-bold text-[#8892b0]">Tu Bot Oficial:</span>
-                <span className="text-xs font-extrabold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
+                <span className="dash-badge text-xs font-extrabold text-cyan-400 bg-cyan-500/10 !rounded-full border border-cyan-500/20 font-mono">
                   @{botUsername}
                 </span>
               </div>
@@ -184,32 +175,38 @@ export default function OnboardingWizard({ user, onClose }: OnboardingWizardProp
           </div>
         )}
 
-        {/* PASO 3: Tutorial de uso por chat */}
+        {/* PASO 3: Ejemplos de uso */}
         {step === 3 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold shadow-lg shadow-emerald-500/10">
-              <MessageSquare size={28} />
+              <CheckCircle2 size={28} />
             </div>
 
             <div>
               <h2 className="text-xl sm:text-2xl font-black text-white leading-tight">
-                ¡Listo para Registrar Gastos! 🚀
+                ¡Listo para empezar! 🚀
               </h2>
               <p className="text-sm text-[#8892b0] mt-2 leading-relaxed">
-                Una vez vinculado, podés enviarle mensajes de chat en cualquier momento:
+                Escribile al bot en Telegram tal como lo harías con un amigo. Probá enviándole mensajes como:
               </p>
             </div>
 
-            <div className="space-y-3 p-4 rounded-2xl bg-white/5 border border-white/5 font-mono text-xs">
-              <div className="p-3 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-200">
-                💬 <strong>Vos:</strong> "Mercado 14500 en efectivo"
+            <div className="space-y-2 font-mono text-xs">
+              <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-emerald-300 flex items-center gap-3">
+                <span className="text-base">💬</span>
+                <span>"Gasté 8500 en la verdulería"</span>
               </div>
-              <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
-                🤖 <strong>Bot:</strong> "✅ Registrado: $14.500 en Comida 🍔 [Efectivo]"
+              <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-cyan-300 flex items-center gap-3">
+                <span className="text-base">💬</span>
+                <span>"Pagué 45000 de luz con Mercado Pago"</span>
+              </div>
+              <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-purple-300 flex items-center gap-3">
+                <span className="text-base">💬</span>
+                <span>"Cobré 250000 de sueldo freelance"</span>
               </div>
             </div>
 
-            <div className="pt-2 flex justify-between items-center">
+            <div className="pt-4 flex justify-between items-center">
               <button
                 onClick={() => setStep(2)}
                 className="text-[#8892b0] hover:text-white font-semibold text-sm flex items-center gap-2 cursor-pointer"
@@ -219,11 +216,11 @@ export default function OnboardingWizard({ user, onClose }: OnboardingWizardProp
               </button>
 
               <button
-                onClick={onClose}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-7 py-3.5 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-emerald-600/30 cursor-pointer hover:scale-105"
+                onClick={handleFinish}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold px-8 py-3.5 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-emerald-600/30 cursor-pointer hover:scale-105"
               >
                 <CheckCircle2 size={18} />
-                <span>¡Entendido, Ir al Dashboard!</span>
+                <span>Entendido, Ir al Dashboard</span>
               </button>
             </div>
           </div>

@@ -74,7 +74,7 @@ export default function AdminDashboardContent({ stats }: AdminDashboardContentPr
       <header className="dash-card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20">
+            <span className="dash-badge text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest bg-indigo-500/10 !rounded-full border border-indigo-500/20">
               Panel de Control
             </span>
           </div>
@@ -85,7 +85,7 @@ export default function AdminDashboardContent({ stats }: AdminDashboardContentPr
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2 text-xs font-bold text-emerald-400">
+          <div className="dash-badge text-xs font-bold text-emerald-400 bg-white/5 border border-white/10 !rounded-xl">
             <CheckCircle2 size={16} />
             <span>Sistema Operativo</span>
           </div>
@@ -214,12 +214,12 @@ export default function AdminDashboardContent({ stats }: AdminDashboardContentPr
                     {/* Rol */}
                     <td>
                       {isAdmin ? (
-                        <span className="inline-flex items-center justify-center gap-1.5 text-[11px] font-extrabold text-purple-300 bg-purple-500/20 px-3 py-1.5 rounded-full border border-purple-500/30 uppercase tracking-wider leading-none">
+                        <span className="dash-badge text-[11px] font-extrabold text-purple-300 bg-purple-500/20 !rounded-full border border-purple-500/30 uppercase tracking-wider">
                           <Shield size={12} />
                           Admin
                         </span>
                       ) : (
-                        <span className="inline-flex items-center justify-center text-[11px] font-semibold text-[#8892b0] bg-white/5 px-3 py-1.5 rounded-full border border-white/10 uppercase tracking-wider leading-none">
+                        <span className="dash-badge text-[11px] font-semibold text-[#8892b0] bg-white/5 !rounded-full border border-white/10 uppercase tracking-wider">
                           Usuario
                         </span>
                       )}
@@ -230,12 +230,12 @@ export default function AdminDashboardContent({ stats }: AdminDashboardContentPr
                       {isAdmin ? (
                         <span className="text-xs text-[#8892b0] italic">N/A (Admin)</span>
                       ) : u.telegram_id ? (
-                        <span className="inline-flex items-center justify-center gap-2 text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-3.5 py-1.5 rounded-xl border border-emerald-500/20 leading-none">
+                        <span className="dash-badge text-xs text-emerald-400 font-semibold bg-emerald-500/10 !rounded-xl border border-emerald-500/20">
                           <CheckCircle2 size={14} />
                           <span>Vinculado ({u.telegram_id})</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center justify-center gap-2 text-xs text-amber-400 font-semibold bg-amber-500/10 px-3.5 py-1.5 rounded-xl border border-amber-500/20 font-mono leading-none">
+                        <span className="dash-badge text-xs text-amber-400 font-semibold bg-amber-500/10 !rounded-xl border border-amber-500/20 font-mono">
                           <Send size={13} />
                           <span>{u.token_vinculacion || 'Sin token'}</span>
                         </span>
@@ -249,7 +249,7 @@ export default function AdminDashboardContent({ stats }: AdminDashboardContentPr
 
                     {/* Transacciones Registradas */}
                     <td>
-                      <span className="inline-flex items-center justify-center text-xs font-bold text-white bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 leading-none">
+                      <span className="dash-badge text-xs font-bold text-white bg-white/5 !rounded-lg border border-white/10">
                         {u.totalTransacciones} operadas
                       </span>
                     </td>
