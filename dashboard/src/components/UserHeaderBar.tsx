@@ -210,36 +210,23 @@ export default function UserHeaderBar({ user, onOpenOnboarding }: UserHeaderBarP
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-between sm:justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-white/10">
-            <code className="font-mono text-xs sm:text-sm text-indigo-300 font-bold bg-black/60 px-5 py-3 rounded-xl border border-indigo-500/30 shadow-inner">
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="hidden sm:flex items-center bg-black/40 border border-slate-800 rounded-md px-3 py-1.5 text-xs font-mono text-slate-300">
               {linkCommand}
-            </code>
-
+            </div>
             <a
               href={directTelegramUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs sm:text-sm font-extrabold px-6 py-3 rounded-xl transition-all flex items-center gap-2.5 shadow-lg shadow-indigo-600/30 cursor-pointer hover:scale-105"
+              className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded-md whitespace-nowrap"
             >
-              <Send size={16} />
-              <span>Abrir en Telegram</span>
+              Abrir en Telegram
             </a>
-
             <button
               onClick={copyCommand}
-              className="w-auto flex-shrink-0 whitespace-nowrap bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-extrabold px-5 py-3 rounded-xl border border-white/15 transition-all flex items-center justify-center gap-2.5 shadow-md cursor-pointer hover:scale-105"
+              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium rounded-md border border-slate-700 whitespace-nowrap cursor-pointer"
             >
-              {copied ? (
-                <>
-                  <Check size={16} className="text-emerald-300" />
-                  <span>¡Copiado!</span>
-                </>
-              ) : (
-                <>
-                  <Copy size={16} />
-                  <span>Copiar</span>
-                </>
-              )}
+              {copied ? '¡Copiado!' : 'Copiar'}
             </button>
           </div>
         </div>

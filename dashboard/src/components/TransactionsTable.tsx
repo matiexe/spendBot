@@ -92,15 +92,17 @@ export default function TransactionsTable({ transactions, categories = [], onNew
     <div className="recent-transactions glass-panel">
       {/* 2. ESTRUCTURA DE LA BARRA DE FILTROS (Filter Bar - Especificaciones Exactas) */}
       <div className="w-full flex flex-col md:flex-row items-center gap-3 mb-6 p-1">
-        {/* Input de Búsqueda */}
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+        {/* Input de Búsqueda con Lupa (Fix de Superposición) */}
+        <div className="relative flex-1 w-full min-w-[240px]">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <Search className="h-4 w-4"/>
+          </div>
           <input
             type="text"
             placeholder="Buscar por descripción..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-900/50 border border-slate-800 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+            className="w-full pl-10 pr-4 py-2 bg-slate-900/60 border border-slate-800 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
           />
         </div>
 
@@ -188,27 +190,27 @@ export default function TransactionsTable({ transactions, categories = [], onNew
               </tr>
             ))}
 
-            {/* 3. ESTRUCTURA DEL EMPTY STATE (Estado Vacío - Especificaciones Exactas) */}
+            {/* Empty State (Estado Vacío - Snippet Exacto) */}
             {filteredTransactions.length === 0 && (
               <tr>
-                <td colSpan={7} className="py-8">
-                  <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-3">
-                    <div className="p-3 bg-slate-800/50 rounded-xl mb-1 text-purple-400">
-                      <Receipt size={28} />
+                <td colSpan={7} className="py-4">
+                  <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                    <div className="p-3 bg-slate-800/50 rounded-xl mb-3 text-purple-400">
+                      <Receipt className="h-6 w-6"/>
                     </div>
-                    <p className="text-base font-semibold text-white">
+                    <h3 className="text-base font-semibold text-white mb-1">
                       No se encontraron transacciones en este período
-                    </p>
-                    <p className="text-sm text-slate-400 max-w-sm">
+                    </h3>
+                    <p className="text-sm text-slate-400 max-w-sm mb-6">
                       Probá ajustando la búsqueda por texto o cambiando los filtros de categoría u origen.
                     </p>
                     {onNewTransaction && (
                       <button
                         onClick={onNewTransaction}
-                        className="mt-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg shadow-sm flex items-center gap-2 cursor-pointer transition-all hover:scale-105"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer"
                       >
-                        <Plus size={16} />
-                        <span>+ Registrar transacción</span>
+                        <Plus className="h-4 w-4"/>
+                        <span>Registrar transacción</span>
                       </button>
                     )}
                   </div>
