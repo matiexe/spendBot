@@ -214,12 +214,12 @@ export default function AdminDashboardContent({ stats }: AdminDashboardContentPr
                     {/* Rol */}
                     <td>
                       {isAdmin ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-purple-300 bg-purple-500/20 px-2.5 py-0.5 rounded-full border border-purple-500/30 uppercase tracking-wider">
+                        <span className="inline-flex items-center justify-center gap-1.5 text-[11px] font-extrabold text-purple-300 bg-purple-500/20 px-3 py-1.5 rounded-full border border-purple-500/30 uppercase tracking-wider leading-none">
                           <Shield size={12} />
                           Admin
                         </span>
                       ) : (
-                        <span className="inline-flex items-center text-[11px] font-semibold text-[#8892b0] bg-white/5 px-2.5 py-0.5 rounded-full border border-white/10 uppercase tracking-wider">
+                        <span className="inline-flex items-center justify-center text-[11px] font-semibold text-[#8892b0] bg-white/5 px-3 py-1.5 rounded-full border border-white/10 uppercase tracking-wider leading-none">
                           Usuario
                         </span>
                       )}
@@ -230,12 +230,12 @@ export default function AdminDashboardContent({ stats }: AdminDashboardContentPr
                       {isAdmin ? (
                         <span className="text-xs text-[#8892b0] italic">N/A (Admin)</span>
                       ) : u.telegram_id ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20">
+                        <span className="inline-flex items-center justify-center gap-2 text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-3.5 py-1.5 rounded-xl border border-emerald-500/20 leading-none">
                           <CheckCircle2 size={14} />
                           <span>Vinculado ({u.telegram_id})</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 text-xs text-amber-400 font-semibold bg-amber-500/10 px-3 py-1 rounded-xl border border-amber-500/20 font-mono">
+                        <span className="inline-flex items-center justify-center gap-2 text-xs text-amber-400 font-semibold bg-amber-500/10 px-3.5 py-1.5 rounded-xl border border-amber-500/20 font-mono leading-none">
                           <Send size={13} />
                           <span>{u.token_vinculacion || 'Sin token'}</span>
                         </span>
@@ -249,7 +249,7 @@ export default function AdminDashboardContent({ stats }: AdminDashboardContentPr
 
                     {/* Transacciones Registradas */}
                     <td>
-                      <span className="text-xs font-bold text-white bg-white/5 px-2.5 py-1 rounded-lg border border-white/10">
+                      <span className="inline-flex items-center justify-center text-xs font-bold text-white bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 leading-none">
                         {u.totalTransacciones} operadas
                       </span>
                     </td>

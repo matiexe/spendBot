@@ -80,7 +80,7 @@ export default function UserHeaderBar({ user, onOpenOnboarding }: UserHeaderBarP
               <div className="flex items-center gap-2">
                 <p className="text-xs font-bold text-white leading-tight">{user.nombre}</p>
                 {isAdmin && (
-                  <span className="text-[10px] bg-indigo-500/20 text-indigo-300 font-extrabold px-1.5 py-0.2 rounded border border-indigo-500/30">ADMIN</span>
+                  <span className="text-[10px] bg-indigo-500/20 text-indigo-300 font-extrabold px-2.5 py-1 rounded-md border border-indigo-500/30 inline-flex items-center justify-center leading-none">ADMIN</span>
                 )}
               </div>
               <p className="text-[11px] text-[#8892b0] truncate max-w-[120px]">{user.email || 'Mi Cuenta'}</p>
@@ -104,7 +104,7 @@ export default function UserHeaderBar({ user, onOpenOnboarding }: UserHeaderBarP
                   <div className="flex items-center gap-2">
                     <h4 className="text-sm font-bold text-white truncate">{user.nombre}</h4>
                     {isAdmin && (
-                      <span className="text-[10px] bg-indigo-500/20 text-indigo-300 font-extrabold px-2 py-0.5 rounded border border-indigo-500/30">ADMIN</span>
+                      <span className="text-[10px] bg-indigo-500/20 text-indigo-300 font-extrabold px-2.5 py-1 rounded-md border border-indigo-500/30 inline-flex items-center justify-center leading-none">ADMIN</span>
                     )}
                   </div>
                   <p className="text-xs text-[#8892b0] truncate mt-0.5">{user.email || 'Sin email registrado'}</p>
@@ -118,12 +118,12 @@ export default function UserHeaderBar({ user, onOpenOnboarding }: UserHeaderBarP
                     Estado de Telegram
                   </div>
                   {user.telegram_id ? (
-                    <div className="flex items-center gap-2.5 text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-3 py-2 rounded-xl border border-emerald-500/20">
-                      <CheckCircle2 size={16} />
+                    <div className="inline-flex items-center justify-center gap-2 text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-3.5 py-1.5 rounded-xl border border-emerald-500/20 leading-none">
+                      <CheckCircle2 size={15} />
                       <span>Vinculado (ID: {user.telegram_id})</span>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between text-xs text-amber-400 font-semibold bg-amber-500/10 px-3 py-2 rounded-xl border border-amber-500/20">
+                    <div className="inline-flex items-center justify-between gap-2 text-xs text-amber-400 font-semibold bg-amber-500/10 px-3.5 py-1.5 rounded-xl border border-amber-500/20 leading-none">
                       <span className="flex items-center gap-2">
                         <AlertTriangle size={15} />
                         Sin vincular
@@ -174,7 +174,7 @@ export default function UserHeaderBar({ user, onOpenOnboarding }: UserHeaderBarP
             <div className="space-y-1.5">
               <h4 className="text-sm sm:text-base font-extrabold text-white flex items-center gap-3 flex-wrap">
                 <span>Vinculá tu cuenta con Telegram</span>
-                <span className="text-xs bg-amber-500/20 text-amber-300 font-bold px-3 py-0.5 rounded-full border border-amber-500/30">Acción Requerida</span>
+                <span className="text-xs bg-amber-500/20 text-amber-300 font-bold px-3.5 py-1.5 rounded-full border border-amber-500/30 inline-flex items-center justify-center gap-1.5 leading-none">Acción Requerida</span>
               </h4>
               <p className="text-xs sm:text-sm text-[#8892b0] font-normal leading-relaxed">
                 Buscá a nuestro bot <strong className="text-cyan-400 font-bold">@{botUsername}</strong> en Telegram o enviá el comando de arriba:
