@@ -90,48 +90,49 @@ export default function TransactionsTable({ transactions, categories = [], onNew
 
   return (
     <div className="recent-transactions glass-panel">
-      {/* 2. ESTRUCTURA DE LA BARRA DE FILTROS (Filter Bar - Especificaciones Exactas) */}
-      <div className="w-full flex flex-col md:flex-row items-center gap-3 mb-6 p-1">
-        {/* Input de Búsqueda con Lupa (Fix de Superposición) */}
-        <div className="relative flex-1 w-full min-w-[240px]">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-            <Search className="h-4 w-4"/>
+      {/* Reemplazo Absoluto: Buscador y Barra de Filtros */}
+      <div className="w-full flex flex-col md:flex-row items-center gap-3 my-4">
+        {/* Input de Búsqueda */}
+        <div className="relative flex-1 w-full">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <Search className="w-4 h-4" />
           </div>
           <input
             type="text"
             placeholder="Buscar por descripción..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-slate-900/60 border border-slate-800 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+            className="w-full pl-10 pr-4 py-2 bg-slate-900/60 border border-slate-800 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-colors"
           />
         </div>
 
-        {/* Dropdown Categorías */}
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="w-full md:w-48 px-3 py-2.5 bg-slate-900/50 border border-slate-800 rounded-lg text-sm text-slate-300 focus:outline-none focus:border-purple-500 cursor-pointer"
-        >
-          <option value="ALL" className="bg-slate-900 text-white">Todas las categorías</option>
-          {categories.map((cat: any) => (
-            <option key={cat.id_categoria || cat.id} value={cat.nombre} className="bg-slate-900 text-white">
-              {cat.emoji ? `${cat.emoji} ` : ''}{cat.nombre}
-            </option>
-          ))}
-        </select>
+        {/* Selects */}
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="w-full md:w-48 px-3 py-2 bg-slate-900/60 border border-slate-800 rounded-lg text-sm text-slate-300 focus:outline-none focus:border-purple-500 cursor-pointer"
+          >
+            <option value="ALL" className="bg-slate-900 text-white">Todas las categorías</option>
+            {categories.map((cat: any) => (
+              <option key={cat.id_categoria || cat.id} value={cat.nombre} className="bg-slate-900 text-white">
+                {cat.emoji ? `${cat.emoji} ` : ''}{cat.nombre}
+              </option>
+            ))}
+          </select>
 
-        {/* Dropdown Cuenta / Origen */}
-        <select
-          value={originFilter}
-          onChange={(e) => setOriginFilter(e.target.value)}
-          className="w-full md:w-48 px-3 py-2.5 bg-slate-900/50 border border-slate-800 rounded-lg text-sm text-slate-300 focus:outline-none focus:border-purple-500 cursor-pointer"
-        >
-          <option value="ALL" className="bg-slate-900 text-white">Todas las cuentas / origen</option>
-          <option value="Telegram" className="bg-slate-900 text-white">Telegram</option>
-          <option value="Web" className="bg-slate-900 text-white">Web</option>
-          <option value="Recurrente" className="bg-slate-900 text-white">Recurrente</option>
-          <option value="Principal" className="bg-slate-900 text-white">Cuenta Principal</option>
-        </select>
+          <select
+            value={originFilter}
+            onChange={(e) => setOriginFilter(e.target.value)}
+            className="w-full md:w-52 px-3 py-2 bg-slate-900/60 border border-slate-800 rounded-lg text-sm text-slate-300 focus:outline-none focus:border-purple-500 cursor-pointer"
+          >
+            <option value="ALL" className="bg-slate-900 text-white">Todas las cuentas / origen</option>
+            <option value="Telegram" className="bg-slate-900 text-white">Telegram</option>
+            <option value="Web" className="bg-slate-900 text-white">Web</option>
+            <option value="Recurrente" className="bg-slate-900 text-white">Recurrente</option>
+            <option value="Principal" className="bg-slate-900 text-white">Cuenta Principal</option>
+          </select>
+        </div>
       </div>
 
       <div className="table-responsive">
