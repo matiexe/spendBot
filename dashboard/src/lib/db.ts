@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import crypto from 'crypto';
+import fs from 'fs';
 
 let dbInstance: Database.Database | null = null;
 
@@ -29,9 +30,36 @@ export interface Expense {
   usuarioNombre?: string;
 }
 
+function resolveDatabasePath(): string {
+  if (process.env.DATABASE_PATH) {
+    return path.resolve(process.env.DATABASE_PATH);
+  }
+  if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('sqlite://')) {
+    const rawPath = process.env.DATABASE_URL.replace('sqlite://', '');
+    return path.resolve(rawPath);
+  }
+
+  const cwd = process.cwd();
+  if (cwd.endsWith('dashboard') || cwd.endsWith('dashboard/')) {
+    return path.resolve(cwd, '../gastos.db');
+  }
+
+  const rootDb = path.resolve(cwd, 'gastos.db');
+  if (fs.existsSync(rootDb)) {
+    return rootDb;
+  }
+
+  const parentDb = path.resolve(cwd, '../gastos.db');
+  if (fs.existsSync(parentDb)) {
+    return parentDb;
+  }
+
+  return rootDb;
+}
+
 export function getDb(): Database.Database {
   if (!dbInstance) {
-    const dbPath = path.resolve(process.cwd(), '../gastos.db');
+    const dbPath = resolveDatabasePath();
     dbInstance = new Database(dbPath);
     dbInstance.pragma('journal_mode = WAL');
 
@@ -136,14 +164,20 @@ export function registerUser(nombre: string, email: string, plainPassword: strin
 
 export function loginUser(email: string, password: string) {
   const db = getDb();
+  const cleanEmail = email.toLowerCase().trim();
   const password_hash = hashPassword(password);
+  
   const user = db.prepare(`
     SELECT id_usuario, nombre, email, password_hash, telegram_id, token_vinculacion, COALESCE(rol, 'USER') as rol
-    FROM usuarios WHERE email = ?
-  `).get(email.toLowerCase().trim()) as any;
+    FROM usuarios WHERE LOWER(email) = ?
+  `).get(cleanEmail) as any;
 
-  if (!user || user.password_hash !== password_hash) {
-    throw new Error('Credenciales incorrectas.');
+  if (!user) {
+    throw new Error('El usuario no existe o el correo electrónico es incorrecto.');
+  }
+
+  if (user.password_hash !== password_hash) {
+    throw new Error('La contraseña ingresada es incorrecta.');
   }
 
   return {

@@ -7,13 +7,18 @@ export async function POST(request: Request) {
     const { email, password } = await request.json();
 
     if (!email || !password) {
-      return NextResponse.json({ success: false, error: 'Email y contraseña requeridos' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Email y contraseña requeridos.' }, { status: 400 });
     }
 
     const user = loginUser(email, password);
     const cookieStore = await cookies();
 
-    const sessionData = JSON.stringify({ userId: user.id_usuario, email: user.email, nombre: user.nombre });
+    const sessionData = JSON.stringify({
+      userId: user.id_usuario,
+      email: user.email,
+      nombre: user.nombre,
+      rol: user.rol
+    });
     
     // Cookie de sesión persistente con sameSite lax y path global /
     cookieStore.set('spendbot_session', sessionData, {
