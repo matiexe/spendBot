@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MoreVertical, Send, Globe, Calendar, Repeat, Search, ChevronDown, Receipt, Plus } from 'lucide-react';
+import { MoreVertical, Send, Globe, Calendar, Repeat, Search, Receipt, Plus } from 'lucide-react';
 
 interface Expense {
   id: number;
@@ -90,54 +90,46 @@ export default function TransactionsTable({ transactions, categories = [], onNew
 
   return (
     <div className="recent-transactions glass-panel">
-      {/* Toolbar de Búsqueda y Filtros */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 mb-5 pb-4 border-b border-white/10">
-        {/* Campo de búsqueda por texto */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8892b0]" size={15} />
+      {/* 2. ESTRUCTURA DE LA BARRA DE FILTROS (Filter Bar - Especificaciones Exactas) */}
+      <div className="w-full flex flex-col md:flex-row items-center gap-3 mb-6 p-1">
+        {/* Input de Búsqueda */}
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
           <input
             type="text"
             placeholder="Buscar por descripción..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-black/40 border border-white/12 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-[#8892b0] focus:outline-none focus:border-indigo-500 transition-all shadow-inner"
+            className="w-full pl-10 pr-4 py-2.5 bg-slate-900/50 border border-slate-800 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Selector Desplegable de Categorías */}
-          <div className="relative flex-1 sm:flex-initial min-w-[160px]">
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full bg-black/40 border border-white/12 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 transition-all appearance-none pr-8 cursor-pointer font-medium"
-            >
-              <option value="ALL" className="bg-[#181920] text-white">Todas las categorías</option>
-              {categories.map((cat: any) => (
-                <option key={cat.id_categoria || cat.id} value={cat.nombre} className="bg-[#181920] text-white">
-                  {cat.emoji ? `${cat.emoji} ` : ''}{cat.nombre}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8892b0] pointer-events-none" size={14} />
-          </div>
+        {/* Dropdown Categorías */}
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="w-full md:w-48 px-3 py-2.5 bg-slate-900/50 border border-slate-800 rounded-lg text-sm text-slate-300 focus:outline-none focus:border-purple-500 cursor-pointer"
+        >
+          <option value="ALL" className="bg-slate-900 text-white">Todas las categorías</option>
+          {categories.map((cat: any) => (
+            <option key={cat.id_categoria || cat.id} value={cat.nombre} className="bg-slate-900 text-white">
+              {cat.emoji ? `${cat.emoji} ` : ''}{cat.nombre}
+            </option>
+          ))}
+        </select>
 
-          {/* Selector Desplegable de Cuenta / Origen */}
-          <div className="relative flex-1 sm:flex-initial min-w-[160px]">
-            <select
-              value={originFilter}
-              onChange={(e) => setOriginFilter(e.target.value)}
-              className="w-full bg-black/40 border border-white/12 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 transition-all appearance-none pr-8 cursor-pointer font-medium"
-            >
-              <option value="ALL" className="bg-[#181920] text-white">Todas las cuentas / origen</option>
-              <option value="Telegram" className="bg-[#181920] text-white">Telegram</option>
-              <option value="Web" className="bg-[#181920] text-white">Web</option>
-              <option value="Recurrente" className="bg-[#181920] text-white">Recurrente</option>
-              <option value="Principal" className="bg-[#181920] text-white">Cuenta Principal</option>
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8892b0] pointer-events-none" size={14} />
-          </div>
-        </div>
+        {/* Dropdown Cuenta / Origen */}
+        <select
+          value={originFilter}
+          onChange={(e) => setOriginFilter(e.target.value)}
+          className="w-full md:w-48 px-3 py-2.5 bg-slate-900/50 border border-slate-800 rounded-lg text-sm text-slate-300 focus:outline-none focus:border-purple-500 cursor-pointer"
+        >
+          <option value="ALL" className="bg-slate-900 text-white">Todas las cuentas / origen</option>
+          <option value="Telegram" className="bg-slate-900 text-white">Telegram</option>
+          <option value="Web" className="bg-slate-900 text-white">Web</option>
+          <option value="Recurrente" className="bg-slate-900 text-white">Recurrente</option>
+          <option value="Principal" className="bg-slate-900 text-white">Cuenta Principal</option>
+        </select>
       </div>
 
       <div className="table-responsive">
@@ -196,24 +188,26 @@ export default function TransactionsTable({ transactions, categories = [], onNew
               </tr>
             ))}
 
-            {/* Empty State Ilustrado y Centrado */}
+            {/* 3. ESTRUCTURA DEL EMPTY STATE (Estado Vacío - Especificaciones Exactas) */}
             {filteredTransactions.length === 0 && (
               <tr>
-                <td colSpan={7} className="py-12 px-4 text-center">
-                  <div className="flex flex-col items-center justify-center space-y-3">
-                    <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#8892b0] shadow-inner">
-                      <Receipt size={28} className="opacity-60 text-indigo-400" />
+                <td colSpan={7} className="py-8">
+                  <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-3">
+                    <div className="p-3 bg-slate-800/50 rounded-xl mb-1 text-purple-400">
+                      <Receipt size={28} />
                     </div>
-                    <div className="space-y-1 max-w-sm">
-                      <p className="text-sm font-extrabold text-white">No se encontraron transacciones en este período</p>
-                      <p className="text-xs text-[#8892b0]">Probá ajustando la búsqueda por texto o cambiando los filtros de categoría u origen.</p>
-                    </div>
+                    <p className="text-base font-semibold text-white">
+                      No se encontraron transacciones en este período
+                    </p>
+                    <p className="text-sm text-slate-400 max-w-sm">
+                      Probá ajustando la búsqueda por texto o cambiando los filtros de categoría u origen.
+                    </p>
                     {onNewTransaction && (
                       <button
                         onClick={onNewTransaction}
-                        className="mt-3 bg-white/10 hover:bg-white/20 text-white font-bold text-xs px-4 py-2.5 rounded-xl border border-white/15 transition-all inline-flex items-center gap-2 cursor-pointer shadow-md hover:scale-105"
+                        className="mt-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg shadow-sm flex items-center gap-2 cursor-pointer transition-all hover:scale-105"
                       >
-                        <Plus size={15} className="text-indigo-400" />
+                        <Plus size={16} />
                         <span>+ Registrar transacción</span>
                       </button>
                     )}

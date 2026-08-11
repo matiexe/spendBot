@@ -120,47 +120,46 @@ export default function TransactionsContent({ initialData, categories }: Transac
       {/* Pestañas de Contenido */}
       {activeTab === 'historial' ? (
         <div>
-          <div className="metrics-grid">
-            <div className="metric-card glass-panel">
-              <div className="metric-icon primary-bg">
-                <Wallet size={24} />
+          {/* KPI Cards con Tipografía y Estructura Unificada */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800 flex items-center gap-4 shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center flex-shrink-0">
+                <Wallet size={22} />
               </div>
-              <div className="metric-content">
-                <h3>Balance</h3>
-                <p className="metric-value">{formatCurrency(balance)}</p>
-              </div>
-            </div>
-
-            <div className="metric-card glass-panel">
-              <div className="metric-icon secondary-bg">
-                <ArrowDownCircle size={24} />
-              </div>
-              <div className="metric-content">
-                <h3>Gastos</h3>
-                <p className="metric-value monto-negativo">{formatCurrency(totalGastos)}</p>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-xs text-slate-400 font-medium mb-1">Balance</h3>
+                <p className="text-2xl font-bold text-white truncate">{formatCurrency(balance)}</p>
               </div>
             </div>
 
-            <div className="metric-card glass-panel">
-              <div className="metric-icon success-bg">
-                <ArrowUpCircle size={24} />
+            <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800 flex items-center gap-4 shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center justify-center flex-shrink-0">
+                <ArrowDownCircle size={22} />
               </div>
-              <div className="metric-content">
-                <h3>Ingresos</h3>
-                <p className="metric-value monto-positivo">{formatCurrency(totalIngresos)}</p>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-xs text-slate-400 font-medium mb-1">Gastos</h3>
+                <p className="text-2xl font-bold text-rose-400 truncate">{formatCurrency(totalGastos)}</p>
               </div>
             </div>
 
-            <div className="metric-card glass-panel">
-              <div className="metric-icon warning-bg">
-                <PieChart size={24} />
+            <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800 flex items-center gap-4 shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                <ArrowUpCircle size={22} />
               </div>
-              <div className="metric-content">
-                <h3>Top Categoría</h3>
-                <p className="metric-value">
-                  {topCategoryName}
-                </p>
-                <span className="metric-subtitle">{topCategorySubtitle}</span>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-xs text-slate-400 font-medium mb-1">Ingresos</h3>
+                <p className="text-2xl font-bold text-emerald-400 truncate">{formatCurrency(totalIngresos)}</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800 flex items-center gap-4 shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
+                <PieChart size={22} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-xs text-slate-400 font-medium mb-1">Top Categoría</h3>
+                <p className="text-2xl font-bold text-white truncate">{topCategoryName}</p>
+                <span className="text-xs text-slate-500 mt-1 block truncate">{topCategorySubtitle}</span>
               </div>
             </div>
           </div>
