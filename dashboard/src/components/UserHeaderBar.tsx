@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { User } from '@/lib/db';
-import { LogOut, Send, CheckCircle2, Copy, Check, ChevronDown, User as UserIcon, AlertTriangle, Sparkles, ExternalLink, HelpCircle, ShieldCheck, Calendar } from 'lucide-react';
+import { LogOut, Send, CheckCircle2, Copy, Check, ChevronDown, User as UserIcon, AlertTriangle, Sparkles, ExternalLink, HelpCircle, ShieldCheck, Calendar, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface UserHeaderBarProps {
@@ -14,6 +14,7 @@ export default function UserHeaderBar({ user, onOpenOnboarding }: UserHeaderBarP
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = async () => {
@@ -33,6 +34,18 @@ export default function UserHeaderBar({ user, onOpenOnboarding }: UserHeaderBarP
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const handleDismissBanner = () => {
+    setBannerDismissed(true);
+    localStorage.setItem('spendbot_telegram_banner_dismissed', 'true');
+  };
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem('spendbot_telegram_banner_dismissed');
+    if (dismissed === 'true') {
+      setBannerDismissed(true);
+    }
+  }, []);
 
   // Cerrar menú al hacer click fuera
   useEffect(() => {
@@ -173,8 +186,15 @@ export default function UserHeaderBar({ user, onOpenOnboarding }: UserHeaderBarP
       </div>
 
       {/* Alerta Destacada de Vinculación de Bot (Solo para usuarios normales) */}
-      {!user.telegram_id && !isAdmin && (
-        <div className="dash-telegram-alert">
+      {!user.telegram_id && !isAdmin && !bannerDismissed && (
+        <div className="dash-telegram-alert relative">
+          <button
+            onClick={handleDismissBanner}
+            className="absolute top-3.5 right-3.5 text-[#8892b0] hover:text-white bg-white/5 hover:bg-white/15 p-1.5 rounded-lg transition-all cursor-pointer border border-white/10 z-10"
+            title="Ocultar aviso de vinculación"
+          >
+            <X size={15} />
+          </button>
           <div className="flex items-start sm:items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center flex-shrink-0 shadow-lg">
               <Send size={22} className="animate-pulse" />

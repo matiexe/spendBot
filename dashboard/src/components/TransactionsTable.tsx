@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { MoreVertical, Send, Globe, Calendar, Repeat } from 'lucide-react';
+import React, { useState } from 'react';
+import { MoreVertical, Send, Globe, Calendar, Repeat, Search, ChevronDown, Receipt, Plus } from 'lucide-react';
 
 interface Expense {
   id: number;
@@ -19,10 +19,15 @@ interface Expense {
 
 interface TransactionsTableProps {
   transactions: Expense[];
+  categories?: any[];
+  onNewTransaction?: () => void;
 }
 
-export default function TransactionsTable({ transactions }: TransactionsTableProps) {
-  const [isMounted, setIsMounted] = React.useState(false);
+export default function TransactionsTable({ transactions, categories = [], onNewTransaction }: TransactionsTableProps) {
+  const [isMounted, setIsMounted] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('ALL');
+  const [originFilter, setOriginFilter] = useState('ALL');
 
   React.useEffect(() => {
     setIsMounted(true);
@@ -32,7 +37,8 @@ export default function TransactionsTable({ transactions }: TransactionsTablePro
     return new Intl.NumberFormat('es-AR', {
       style: 'currency',
       currency: 'ARS',
-      maximumFractionDigits: 0
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }).format(amount);
   };
 
@@ -58,6 +64,20 @@ export default function TransactionsTable({ transactions }: TransactionsTablePro
     }
   };
 
+  // Filtrado dinámico de transacciones
+  const filteredTransactions = transactions.filter((t) => {
+    const matchesSearch = t.descripcion?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          t.categoriaNombre?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesCategory = categoryFilter === 'ALL' || t.categoriaNombre === categoryFilter || String(t.categoria_id) === categoryFilter;
+    
+    const matchesOrigin = originFilter === 'ALL' || 
+                          (t.origen || 'Telegram').toLowerCase() === originFilter.toLowerCase() ||
+                          (t.cuenta || 'Principal').toLowerCase() === originFilter.toLowerCase();
+
+    return matchesSearch && matchesCategory && matchesOrigin;
+  });
+
   if (!isMounted) {
     return (
       <div className="recent-transactions glass-panel">
@@ -70,6 +90,56 @@ export default function TransactionsTable({ transactions }: TransactionsTablePro
 
   return (
     <div className="recent-transactions glass-panel">
+      {/* Toolbar de Búsqueda y Filtros */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 mb-5 pb-4 border-b border-white/10">
+        {/* Campo de búsqueda por texto */}
+        <div className="relative flex-1">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8892b0]" size={15} />
+          <input
+            type="text"
+            placeholder="Buscar por descripción..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-black/40 border border-white/12 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-[#8892b0] focus:outline-none focus:border-indigo-500 transition-all shadow-inner"
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Selector Desplegable de Categorías */}
+          <div className="relative flex-1 sm:flex-initial min-w-[160px]">
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="w-full bg-black/40 border border-white/12 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 transition-all appearance-none pr-8 cursor-pointer font-medium"
+            >
+              <option value="ALL" className="bg-[#181920] text-white">Todas las categorías</option>
+              {categories.map((cat: any) => (
+                <option key={cat.id_categoria || cat.id} value={cat.nombre} className="bg-[#181920] text-white">
+                  {cat.emoji ? `${cat.emoji} ` : ''}{cat.nombre}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8892b0] pointer-events-none" size={14} />
+          </div>
+
+          {/* Selector Desplegable de Cuenta / Origen */}
+          <div className="relative flex-1 sm:flex-initial min-w-[160px]">
+            <select
+              value={originFilter}
+              onChange={(e) => setOriginFilter(e.target.value)}
+              className="w-full bg-black/40 border border-white/12 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 transition-all appearance-none pr-8 cursor-pointer font-medium"
+            >
+              <option value="ALL" className="bg-[#181920] text-white">Todas las cuentas / origen</option>
+              <option value="Telegram" className="bg-[#181920] text-white">Telegram</option>
+              <option value="Web" className="bg-[#181920] text-white">Web</option>
+              <option value="Recurrente" className="bg-[#181920] text-white">Recurrente</option>
+              <option value="Principal" className="bg-[#181920] text-white">Cuenta Principal</option>
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8892b0] pointer-events-none" size={14} />
+          </div>
+        </div>
+      </div>
+
       <div className="table-responsive">
         <table className="transactions-table">
           <thead>
@@ -84,7 +154,7 @@ export default function TransactionsTable({ transactions }: TransactionsTablePro
             </tr>
           </thead>
           <tbody>
-            {transactions.map((t) => (
+            {filteredTransactions.map((t) => (
               <tr key={t.id}>
                 <td className="date-cell" suppressHydrationWarning>{formatDate(t.fecha)}</td>
                 <td style={{ fontWeight: 500, color: '#fff' }}>{t.descripcion || 'Sin descripción'}</td>
@@ -125,9 +195,30 @@ export default function TransactionsTable({ transactions }: TransactionsTablePro
                 </td>
               </tr>
             ))}
-            {transactions.length === 0 && (
+
+            {/* Empty State Ilustrado y Centrado */}
+            {filteredTransactions.length === 0 && (
               <tr>
-                <td colSpan={7} className="empty-state">No se encontraron transacciones</td>
+                <td colSpan={7} className="py-12 px-4 text-center">
+                  <div className="flex flex-col items-center justify-center space-y-3">
+                    <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#8892b0] shadow-inner">
+                      <Receipt size={28} className="opacity-60 text-indigo-400" />
+                    </div>
+                    <div className="space-y-1 max-w-sm">
+                      <p className="text-sm font-extrabold text-white">No se encontraron transacciones en este período</p>
+                      <p className="text-xs text-[#8892b0]">Probá ajustando la búsqueda por texto o cambiando los filtros de categoría u origen.</p>
+                    </div>
+                    {onNewTransaction && (
+                      <button
+                        onClick={onNewTransaction}
+                        className="mt-3 bg-white/10 hover:bg-white/20 text-white font-bold text-xs px-4 py-2.5 rounded-xl border border-white/15 transition-all inline-flex items-center gap-2 cursor-pointer shadow-md hover:scale-105"
+                      >
+                        <Plus size={15} className="text-indigo-400" />
+                        <span>+ Registrar transacción</span>
+                      </button>
+                    )}
+                  </div>
+                </td>
               </tr>
             )}
           </tbody>

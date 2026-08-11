@@ -58,13 +58,22 @@ export default function TransactionsContent({ initialData, categories }: Transac
     return new Intl.NumberFormat('es-AR', {
       style: 'currency',
       currency: 'ARS',
-      maximumFractionDigits: 0
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }).format(amount);
   };
 
   const balance = data.recent.reduce((acc: number, t: any) => acc + t.monto, 0);
   const totalGastos = data.recent.reduce((acc: number, t: any) => t.monto < 0 ? acc + t.monto : acc, 0);
   const totalIngresos = data.recent.reduce((acc: number, t: any) => t.monto > 0 ? acc + t.monto : acc, 0);
+
+  const hasTopCategory = data.byCategory && data.byCategory.length > 0 && data.byCategory[0]?.total > 0;
+  const topCategoryName = hasTopCategory 
+    ? `${data.byCategory[0]?.emoji ? data.byCategory[0].emoji + ' ' : ''}${data.byCategory[0]?.nombre}`
+    : 'Sin datos';
+  const topCategorySubtitle = hasTopCategory 
+    ? `${formatCurrency(data.byCategory[0]?.total)} total` 
+    : '— Sin registros';
 
   if (!isMounted) return null;
 
@@ -149,14 +158,18 @@ export default function TransactionsContent({ initialData, categories }: Transac
               <div className="metric-content">
                 <h3>Top Categoría</h3>
                 <p className="metric-value">
-                  {data.byCategory[0]?.emoji} {data.byCategory[0]?.nombre || 'Hogar'}
+                  {topCategoryName}
                 </p>
-                <span className="metric-subtitle">{formatCurrency(data.byCategory[0]?.total || 0)} total</span>
+                <span className="metric-subtitle">{topCategorySubtitle}</span>
               </div>
             </div>
           </div>
 
-          <TransactionsTable transactions={data.recent} />
+          <TransactionsTable
+            transactions={data.recent}
+            categories={categories}
+            onNewTransaction={() => setShowModal(true)}
+          />
         </div>
       ) : (
         <RecurringTransactionsView
