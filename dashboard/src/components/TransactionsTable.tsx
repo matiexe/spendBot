@@ -191,26 +191,31 @@ export default function TransactionsTable({ transactions, categories = [], onNew
               </tr>
             ))}
 
-            {/* Empty State (Estado Vacío - Snippet Exacto) */}
+            {/* Empty State (Estado sin registros - Snippet Exacto Reemplazado) */}
             {filteredTransactions.length === 0 && (
               <tr>
                 <td colSpan={7} className="py-4">
-                  <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-                    <div className="p-3 bg-slate-800/50 rounded-xl mb-3 text-purple-400">
-                      <Receipt className="h-6 w-6"/>
+                  <div className="w-full flex flex-col items-center justify-center py-12 px-4 text-center">
+                    <div className="p-3 bg-purple-950/40 border border-purple-800/30 rounded-xl mb-3 text-purple-400">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 14l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
                     </div>
+                    
                     <h3 className="text-base font-semibold text-white mb-1">
                       No se encontraron transacciones en este período
                     </h3>
-                    <p className="text-sm text-slate-400 max-w-sm mb-6">
+                    
+                    <p className="text-sm text-slate-400 max-w-md mb-5 leading-relaxed">
                       Probá ajustando la búsqueda por texto o cambiando los filtros de categoría u origen.
                     </p>
+                    
                     {onNewTransaction && (
                       <button
                         onClick={onNewTransaction}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm cursor-pointer"
                       >
-                        <Plus className="h-4 w-4"/>
+                        <Plus className="w-4 h-4" />
                         <span>Registrar transacción</span>
                       </button>
                     )}
