@@ -210,21 +210,21 @@ export default function UserHeaderBar({ user, onOpenOnboarding }: UserHeaderBarP
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="hidden sm:flex items-center bg-black/40 border border-slate-800 rounded-md px-3 py-1.5 text-xs font-mono text-slate-300">
+          <div className="flex items-center gap-2 shrink-0 ml-auto pr-6">
+            <code className="hidden lg:inline-block bg-black/50 border border-slate-800 px-2.5 py-1 rounded text-xs font-mono text-slate-300">
               {linkCommand}
-            </div>
+            </code>
             <a
               href={directTelegramUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded-md whitespace-nowrap"
+              className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded-md whitespace-nowrap transition-colors"
             >
               Abrir en Telegram
             </a>
             <button
               onClick={copyCommand}
-              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium rounded-md border border-slate-700 whitespace-nowrap cursor-pointer"
+              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-medium rounded-md whitespace-nowrap transition-colors cursor-pointer"
             >
               {copied ? '¡Copiado!' : 'Copiar'}
             </button>
