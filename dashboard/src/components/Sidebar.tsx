@@ -135,13 +135,13 @@ export default function Sidebar({ user }: SidebarProps) {
         </ul>
       </nav>
 
-      <div className="mt-auto pt-3 pb-1">
-        <div className="px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-between text-xs text-[#cbd5e1] font-mono shadow-sm">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
-            <span className="text-[11px] font-bold text-white">SpendBot v1.0</span>
+      <div className="mt-auto pt-4 pb-4 pl-4 pr-4 mb-4">
+        <div className="px-3.5 py-3 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-between text-xs text-[#cbd5e1] font-mono shadow-md">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+            <span className="text-[11px] font-bold text-white tracking-wide">SpendBot v1.0</span>
           </div>
-          <span className="text-[10px] text-indigo-400 font-extrabold uppercase bg-indigo-500/15 px-2 py-0.5 rounded border border-indigo-500/20">Online</span>
+          <span className="text-[10px] text-indigo-300 font-extrabold uppercase bg-indigo-500/20 px-2 py-0.5 rounded-md border border-indigo-500/30">Online</span>
         </div>
       </div>
     </aside>

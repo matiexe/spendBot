@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { User } from '@/lib/db';
-import { LogOut, Send, CheckCircle2, Copy, Check, ChevronDown, User as UserIcon, AlertTriangle, Sparkles, ExternalLink, HelpCircle, ShieldCheck } from 'lucide-react';
+import { LogOut, Send, CheckCircle2, Copy, Check, ChevronDown, User as UserIcon, AlertTriangle, Sparkles, ExternalLink, HelpCircle, ShieldCheck, Calendar } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface UserHeaderBarProps {
@@ -65,100 +65,110 @@ export default function UserHeaderBar({ user, onOpenOnboarding }: UserHeaderBarP
           </div>
         </div>
 
-        {/* Sección Usuario con Avatar Circular y Menú Desplegable */}
-        <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-3.5 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/12 transition-all cursor-pointer group shadow-md backdrop-blur-md"
-          >
-            {/* Avatar Circular */}
-            <div className={`w-10 h-10 rounded-full ${isAdmin ? 'bg-gradient-to-tr from-purple-600 to-indigo-600' : 'bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500'} flex items-center justify-center text-white font-black text-sm shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform`}>
-              {initial}
-            </div>
-
-            <div className="hidden sm:block text-left pr-1">
-              <div className="flex items-center gap-2">
-                <p className="text-xs font-bold text-white leading-tight">{user.nombre}</p>
-                {isAdmin && (
-                  <span className="dash-badge text-[10px] bg-indigo-500/20 text-indigo-300 font-extrabold !rounded-md border border-indigo-500/30">ADMIN</span>
-                )}
-              </div>
-              <p className="text-[11px] text-[#8892b0] truncate max-w-[120px]">{user.email || 'Mi Cuenta'}</p>
-            </div>
-
-            <ChevronDown
-              size={16}
-              className={`text-[#8892b0] group-hover:text-white transition-transform duration-200 ${dropdownOpen ? 'transform rotate-180 text-white' : ''}`}
-            />
+        {/* Grupo de Controles del Header: Selector de Fechas Global + Menú de Perfil */}
+        <div className="flex items-center gap-3">
+          {/* Selector de Rango de Fechas Global (Jerarquía Superior UX) */}
+          <button className="hidden md:flex items-center gap-2.5 bg-white/5 hover:bg-white/10 text-[#cbd5e1] text-xs font-semibold px-4 py-2 rounded-full border border-white/12 transition-all shadow-sm cursor-pointer backdrop-blur-md">
+            <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="font-mono">01/08/2026 ➔ 31/08/2026</span>
+            <ChevronDown className="w-3.5 h-3.5 text-[#8892b0]" />
           </button>
 
-          {/* Menú Desplegable (Dropdown) */}
-          {dropdownOpen && (
-            <div className="dash-dropdown-menu animate-in fade-in zoom-in-95">
-              {/* Card Perfil de Usuario */}
-              <div className="p-4 rounded-xl bg-white/5 flex items-center gap-3.5 border border-white/5">
-                <div className={`w-11 h-11 rounded-full ${isAdmin ? 'bg-gradient-to-tr from-purple-600 to-indigo-600' : 'bg-gradient-to-tr from-indigo-500 to-purple-600'} flex items-center justify-center text-white font-bold text-base flex-shrink-0 shadow-md`}>
-                  {initial}
-                </div>
-                <div className="min-w-0 overflow-hidden">
-                  <div className="flex items-center gap-2">
-                    <h4 className="text-sm font-bold text-white truncate">{user.nombre}</h4>
-                    {isAdmin && (
-                      <span className="dash-badge text-[10px] bg-indigo-500/20 text-indigo-300 font-extrabold !rounded-md border border-indigo-500/30">ADMIN</span>
-                    )}
-                  </div>
-                  <p className="text-xs text-[#8892b0] truncate mt-0.5">{user.email || 'Sin email registrado'}</p>
-                </div>
+          {/* Sección Usuario con Avatar Circular y Menú Desplegable */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex items-center gap-3.5 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/12 transition-all cursor-pointer group shadow-md backdrop-blur-md"
+            >
+              {/* Avatar Circular */}
+              <div className={`w-10 h-10 rounded-full ${isAdmin ? 'bg-gradient-to-tr from-purple-600 to-indigo-600' : 'bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500'} flex items-center justify-center text-white font-black text-sm shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform`}>
+                {initial}
               </div>
 
-              {/* Estado de Telegram (Solo para usuarios no admin) */}
-              {!isAdmin && (
-                <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/5 flex flex-col gap-2">
-                  <div className="text-[11px] uppercase font-extrabold tracking-wider text-[#8892b0]">
-                    Estado de Telegram
-                  </div>
-                  {user.telegram_id ? (
-                    <div className="dash-badge text-xs text-emerald-400 font-semibold bg-emerald-500/10 !rounded-xl border border-emerald-500/20">
-                      <CheckCircle2 size={15} />
-                      <span>Vinculado (ID: {user.telegram_id})</span>
-                    </div>
-                  ) : (
-                    <div className="dash-badge text-xs text-amber-400 font-semibold bg-amber-500/10 !rounded-xl border border-amber-500/20">
-                      <AlertTriangle size={15} />
-                      <span>Sin vincular</span>
-                    </div>
+              <div className="hidden sm:block text-left pr-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-bold text-white leading-tight">{user.nombre}</p>
+                  {isAdmin && (
+                    <span className="dash-badge text-[10px] bg-indigo-500/20 text-indigo-300 font-extrabold !rounded-md border border-indigo-500/30">ADMIN</span>
                   )}
                 </div>
-              )}
+                <p className="text-[11px] text-[#8892b0] truncate max-w-[120px]">{user.email || 'Mi Cuenta'}</p>
+              </div>
 
-              {/* Botón Guía de Onboarding */}
-              {onOpenOnboarding && !isAdmin && (
+              <ChevronDown
+                size={16}
+                className={`text-[#8892b0] group-hover:text-white transition-transform duration-200 ${dropdownOpen ? 'transform rotate-180 text-white' : ''}`}
+              />
+            </button>
+
+            {/* Menú Desplegable (Dropdown) */}
+            {dropdownOpen && (
+              <div className="dash-dropdown-menu animate-in fade-in zoom-in-95">
+                {/* Card Perfil de Usuario */}
+                <div className="p-4 rounded-xl bg-white/5 flex items-center gap-3.5 border border-white/5">
+                  <div className={`w-11 h-11 rounded-full ${isAdmin ? 'bg-gradient-to-tr from-purple-600 to-indigo-600' : 'bg-gradient-to-tr from-indigo-500 to-purple-600'} flex items-center justify-center text-white font-bold text-base flex-shrink-0 shadow-md`}>
+                    {initial}
+                  </div>
+                  <div className="min-w-0 overflow-hidden">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-bold text-white truncate">{user.nombre}</h4>
+                      {isAdmin && (
+                        <span className="dash-badge text-[10px] bg-indigo-500/20 text-indigo-300 font-extrabold !rounded-md border border-indigo-500/30">ADMIN</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-[#8892b0] truncate mt-0.5">{user.email || 'Sin email registrado'}</p>
+                  </div>
+                </div>
+
+                {/* Estado de Telegram (Solo para usuarios no admin) */}
+                {!isAdmin && (
+                  <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/5 flex flex-col gap-2">
+                    <div className="text-[11px] uppercase font-extrabold tracking-wider text-[#8892b0]">
+                      Estado de Telegram
+                    </div>
+                    {user.telegram_id ? (
+                      <div className="dash-badge text-xs text-emerald-400 font-semibold bg-emerald-500/10 !rounded-xl border border-emerald-500/20">
+                        <CheckCircle2 size={15} />
+                        <span>Vinculado (ID: {user.telegram_id})</span>
+                      </div>
+                    ) : (
+                      <div className="dash-badge text-xs text-amber-400 font-semibold bg-amber-500/10 !rounded-xl border border-amber-500/20">
+                        <AlertTriangle size={15} />
+                        <span>Sin vincular</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Botón Guía de Onboarding */}
+                {onOpenOnboarding && !isAdmin && (
+                  <button
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      onOpenOnboarding();
+                    }}
+                    className="w-full text-left p-3.5 px-4 rounded-xl text-xs font-bold text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 transition-all flex items-center justify-between cursor-pointer shadow-sm"
+                  >
+                    <span className="flex items-center gap-3">
+                      <HelpCircle size={16} className="text-purple-400" />
+                      Guía de Inicio / Onboarding
+                    </span>
+                  </button>
+                )}
+
+                <div className="border-t border-white/10 my-0.5" />
+
+                {/* Botón Cerrar Sesión */}
                 <button
-                  onClick={() => {
-                    setDropdownOpen(false);
-                    onOpenOnboarding();
-                  }}
-                  className="w-full text-left p-3.5 px-4 rounded-xl text-xs font-bold text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 transition-all flex items-center justify-between cursor-pointer shadow-sm"
+                  onClick={handleLogout}
+                  className="w-full text-left p-4 px-5 rounded-xl text-xs font-extrabold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-all flex items-center gap-3 cursor-pointer shadow-sm"
                 >
-                  <span className="flex items-center gap-3">
-                    <HelpCircle size={16} className="text-purple-400" />
-                    Guía de Inicio / Onboarding
-                  </span>
+                  <LogOut size={16} />
+                  <span>Cerrar Sesión</span>
                 </button>
-              )}
-
-              <div className="border-t border-white/10 my-0.5" />
-
-              {/* Botón Cerrar Sesión */}
-              <button
-                onClick={handleLogout}
-                className="w-full text-left p-4 px-5 rounded-xl text-xs font-extrabold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-all flex items-center gap-3 cursor-pointer shadow-sm"
-              >
-                <LogOut size={16} />
-                <span>Cerrar Sesión</span>
-              </button>
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

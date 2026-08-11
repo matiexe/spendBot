@@ -146,7 +146,7 @@ export default function FinancialPanel({ data }: FinancialPanelProps) {
               </button>
             </div>
 
-            <div className="space-y-2 mb-6">
+            <div className="space-y-2.5 mb-6">
               <div className="flex flex-wrap items-baseline gap-3.5">
                 <span className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight font-mono ${totalMonthVal === 0 ? 'text-white' : totalMonthVal > 0 ? 'text-[#ef4444]' : 'text-[#10b981]'}`}>
                   {formatCurrency(totalMonthVal)}
@@ -163,15 +163,38 @@ export default function FinancialPanel({ data }: FinancialPanelProps) {
                 Gastos del mes actual vs. período anterior
               </p>
 
-              {/* Métricas secundarias de contexto para dar rica información al cero */}
-              <div className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t border-white/5">
-                <div className="flex items-center gap-2 text-xs text-[#8892b0]">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                  <span>Ingresos: <strong className="text-white font-mono">$0</strong></span>
+              {/* Gráfica de Área Suave Neón Verde para dar dinamismo a la card */}
+              <div className="my-3 relative h-14 w-full overflow-hidden rounded-xl bg-gradient-to-r from-emerald-500/10 via-indigo-500/5 to-purple-500/10 border border-emerald-500/20 p-2 flex items-end shadow-inner">
+                <svg className="w-full h-full overflow-visible" viewBox="0 0 400 60" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="balanceAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
+                      <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d="M0,48 Q50,22 100,40 T200,18 T300,32 T400,12 L400,60 L0,60 Z"
+                    fill="url(#balanceAreaGrad)"
+                  />
+                  <path
+                    d="M0,48 Q50,22 100,40 T200,18 T300,32 T400,12"
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
+
+              {/* Métricas secundarias de contexto con amplio espacio y formato uniforme ($ 0,00) */}
+              <div className="flex flex-wrap items-center gap-6 sm:gap-8 pt-3 border-t border-white/10">
+                <div className="flex items-center gap-2.5 text-xs text-[#cbd5e1]">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                  <span>Ingresos: <strong className="text-white font-mono font-bold">$ 0,00</strong></span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-[#8892b0]">
-                  <span className="w-2 h-2 rounded-full bg-rose-400" />
-                  <span>Egresos: <strong className="text-white font-mono">{formatCurrency(totalMonthVal)}</strong></span>
+                <div className="flex items-center gap-2.5 text-xs text-[#cbd5e1]">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.5)]" />
+                  <span>Egresos: <strong className="text-white font-mono font-bold">{totalMonthVal === 0 ? '$ 0,00' : formatCurrency(totalMonthVal)}</strong></span>
                 </div>
               </div>
             </div>
