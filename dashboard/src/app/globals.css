@@ -341,15 +341,24 @@ html, body {
   font-size: 0.925rem;
 }
 
-.dash-badge,
-.category-badge {
+.dash-badge {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 0.45rem !important; /* Gap cómodo de 7px entre icono y texto */
+  padding: 0.5rem 0.95rem !important; /* Aire horizontal y vertical estilo GitHub/Linear/Vercel */
+  line-height: 1 !important;
+  white-space: nowrap;
+}
+
+.category-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.45rem !important;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border);
-  padding: 0.5rem 0.95rem !important; /* Padding horizontal y vertical con aire estilo GitHub/Linear/Vercel */
+  padding: 0.5rem 0.95rem !important;
   border-radius: 10px;
   font-size: 0.825rem;
   color: #fff;
