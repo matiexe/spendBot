@@ -92,9 +92,9 @@ export default function TransactionsTable({ transactions, categories = [], onNew
     <div className="recent-transactions glass-panel">
       {/* Reemplazo Absoluto: Buscador y Barra de Filtros */}
       <div className="w-full flex flex-col md:flex-row items-center gap-3 my-4">
-        {/* Input de Búsqueda */}
+        {/* Input de Búsqueda con padding-left obligatorio para evitar pisado de la lupa */}
         <div className="relative flex-1 w-full">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 z-10">
             <Search className="w-4 h-4" />
           </div>
           <input
@@ -102,6 +102,7 @@ export default function TransactionsTable({ transactions, categories = [], onNew
             placeholder="Buscar por descripción..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ paddingLeft: '2.5rem' }}
             className="w-full pl-10 pr-4 py-2 bg-slate-900/60 border border-slate-800 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-colors"
           />
         </div>
@@ -191,22 +192,33 @@ export default function TransactionsTable({ transactions, categories = [], onNew
               </tr>
             ))}
 
-            {/* Empty State (Estado sin registros - Snippet Exacto Reemplazado) */}
+            {/* Empty State (Flujo normal estricto: [Icono] -> [Título] -> [Descripción] -> [Botón]) */}
             {filteredTransactions.length === 0 && (
               <tr>
-                <td colSpan={7} className="py-4">
-                  <div className="w-full flex flex-col items-center justify-center py-12 px-4 text-center">
-                    <div className="p-3 bg-purple-950/40 border border-purple-800/30 rounded-xl mb-3 text-purple-400">
+                <td colSpan={7} style={{ padding: 0, border: 'none' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      rowGap: '1rem',
+                      padding: '3rem 1rem',
+                      textAlign: 'center'
+                    }}
+                    className="w-full"
+                  >
+                    <div className="p-3 bg-purple-950/40 border border-purple-800/30 rounded-xl text-purple-400">
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 14l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     
-                    <h3 className="text-base font-semibold text-white mb-1">
+                    <h3 className="text-base font-semibold text-white">
                       No se encontraron transacciones en este período
                     </h3>
                     
-                    <p className="text-sm text-slate-400 max-w-md mb-5 leading-relaxed">
+                    <p className="text-sm text-slate-400 max-w-md leading-relaxed">
                       Probá ajustando la búsqueda por texto o cambiando los filtros de categoría u origen.
                     </p>
                     
