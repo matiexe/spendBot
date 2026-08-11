@@ -192,7 +192,7 @@ export default function TransactionsTable({ transactions, categories = [], onNew
               </tr>
             ))}
 
-            {/* Empty State (Flujo normal estricto: [Icono] -> [Título] -> [Descripción] -> [Botón]) */}
+            {/* Empty State (Fix Final: Gap Vertical, mb-6 en párrafo, mt-2 en botón) */}
             {filteredTransactions.length === 0 && (
               <tr>
                 <td colSpan={7} style={{ padding: 0, border: 'none' }}>
@@ -202,30 +202,34 @@ export default function TransactionsTable({ transactions, categories = [], onNew
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      rowGap: '1rem',
+                      gap: '1rem',
                       padding: '3rem 1rem',
                       textAlign: 'center'
                     }}
-                    className="w-full"
+                    className="w-full flex flex-col items-center justify-center py-12 px-4 text-center gap-4"
                   >
-                    <div className="p-3 bg-purple-950/40 border border-purple-800/30 rounded-xl text-purple-400">
+                    <div className="p-3 bg-purple-950/40 border border-purple-800/30 rounded-xl mb-1 text-purple-400">
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 14l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     
-                    <h3 className="text-base font-semibold text-white">
+                    <h3 className="text-base font-semibold text-white mb-1">
                       No se encontraron transacciones en este período
                     </h3>
                     
-                    <p className="text-sm text-slate-400 max-w-md leading-relaxed">
+                    <p
+                      style={{ marginBottom: '1.5rem' }}
+                      className="text-sm text-slate-400 max-w-md mb-6 leading-relaxed"
+                    >
                       Probá ajustando la búsqueda por texto o cambiando los filtros de categoría u origen.
                     </p>
                     
                     {onNewTransaction && (
                       <button
                         onClick={onNewTransaction}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm cursor-pointer"
+                        style={{ marginTop: '0.5rem', display: 'inline-flex' }}
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 mt-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm cursor-pointer"
                       >
                         <Plus className="w-4 h-4" />
                         <span>Registrar transacción</span>
