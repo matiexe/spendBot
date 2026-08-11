@@ -146,9 +146,9 @@ export default function FinancialPanel({ data }: FinancialPanelProps) {
               </button>
             </div>
 
-            <div className="space-y-1.5 mb-8">
+            <div className="space-y-2 mb-6">
               <div className="flex flex-wrap items-baseline gap-3.5">
-                <span className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[#ef4444] font-mono">
+                <span className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight font-mono ${totalMonthVal === 0 ? 'text-white' : totalMonthVal > 0 ? 'text-[#ef4444]' : 'text-[#10b981]'}`}>
                   {formatCurrency(totalMonthVal)}
                 </span>
                 
@@ -158,18 +158,31 @@ export default function FinancialPanel({ data }: FinancialPanelProps) {
                   </span>
                 )}
               </div>
+
               <p className="text-xs sm:text-sm text-[#8892b0] font-medium">
                 Gastos del mes actual vs. período anterior
               </p>
+
+              {/* Métricas secundarias de contexto para dar rica información al cero */}
+              <div className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t border-white/5">
+                <div className="flex items-center gap-2 text-xs text-[#8892b0]">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <span>Ingresos: <strong className="text-white font-mono">$0</strong></span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-[#8892b0]">
+                  <span className="w-2 h-2 rounded-full bg-rose-400" />
+                  <span>Egresos: <strong className="text-white font-mono">{formatCurrency(totalMonthVal)}</strong></span>
+                </div>
+              </div>
             </div>
 
             {/* Gráfico de Barras de Rendimiento Mensual con Datos Reales */}
             <div className="mt-8 relative pt-6 pb-2">
               <div className="flex justify-between items-center mb-4">
-                <span className="text-xs font-semibold text-[#8892b0] uppercase tracking-wider">
-                  Rendimiento Mensual
+                <span className="text-xs font-semibold text-[#8892b0] tracking-wide">
+                  Rendimiento mensual
                 </span>
-                <span className="text-xs text-[#8892b0]/70">Perspectiva 13 Meses</span>
+                <span className="text-xs text-[#8892b0]/70">Perspectiva de 13 meses</span>
               </div>
 
               <div className="absolute top-[52%] left-0 right-0 border-b border-dashed border-white/10 z-0" />
@@ -180,7 +193,7 @@ export default function FinancialPanel({ data }: FinancialPanelProps) {
                 </div>
               )}
 
-              <div className="h-52 sm:h-56 w-full flex items-center justify-between gap-1.5 sm:gap-2.5 relative z-10 pt-4 pb-2 px-1 sm:px-2">
+              <div className="h-64 sm:h-72 w-full flex items-center justify-between gap-1.5 sm:gap-2.5 relative z-10 pt-4 pb-2 px-1 sm:px-2">
                 {monthsData.map((item, idx) => {
                   const isPositiveBar = item.type === 'positive-green';
                   const isStableBar = item.type === 'stable-green';

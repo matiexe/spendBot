@@ -22,7 +22,7 @@ export default function UserHeaderBar({ user, onOpenOnboarding }: UserHeaderBarP
     router.refresh();
   };
 
-  const botUsername = 'Contolgastos_bot';
+  const botUsername = 'Controlgastos_bot';
   const token = user.token_vinculacion || 'VIN-0000';
   const linkCommand = `/start ${token}`;
   const directTelegramUrl = `https://t.me/${botUsername}?start=${token}`;
@@ -175,7 +175,7 @@ export default function UserHeaderBar({ user, onOpenOnboarding }: UserHeaderBarP
                 <span className="dash-badge text-xs bg-amber-500/20 text-amber-300 font-bold !rounded-full border border-amber-500/30">Acción Requerida</span>
               </h4>
               <p className="text-xs sm:text-sm text-[#8892b0] font-normal leading-relaxed">
-                Buscá a nuestro bot <strong className="text-cyan-400 font-bold">@{botUsername}</strong> en Telegram o enviá el comando de arriba:
+                Buscá a nuestro bot <strong className="text-indigo-300 font-bold">@{botUsername}</strong> en Telegram o enviá el comando de arriba:
               </p>
             </div>
           </div>
@@ -189,7 +189,7 @@ export default function UserHeaderBar({ user, onOpenOnboarding }: UserHeaderBarP
               href={directTelegramUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-cyan-600 hover:bg-cyan-500 text-white text-xs sm:text-sm font-extrabold px-6 py-3 rounded-xl transition-all flex items-center gap-2.5 shadow-lg shadow-cyan-600/30 cursor-pointer hover:scale-105"
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs sm:text-sm font-extrabold px-6 py-3 rounded-xl transition-all flex items-center gap-2.5 shadow-lg shadow-indigo-600/30 cursor-pointer hover:scale-105"
             >
               <Send size={16} />
               <span>Abrir en Telegram</span>
@@ -197,7 +197,7 @@ export default function UserHeaderBar({ user, onOpenOnboarding }: UserHeaderBarP
 
             <button
               onClick={copyCommand}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-extrabold px-6 py-3 rounded-xl transition-all flex items-center gap-2.5 shadow-lg shadow-indigo-600/30 cursor-pointer hover:scale-105"
+              className="w-auto flex-shrink-0 whitespace-nowrap bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-extrabold px-5 py-3 rounded-xl border border-white/15 transition-all flex items-center justify-center gap-2.5 shadow-md cursor-pointer hover:scale-105"
             >
               {copied ? (
                 <>

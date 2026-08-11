@@ -13,7 +13,7 @@ export default function OnboardingWizard({ user, onClose }: OnboardingWizardProp
   const [step, setStep] = useState(1);
   const [copied, setCopied] = useState(false);
 
-  const botUsername = 'Contolgastos_bot';
+  const botUsername = 'Controlgastos_bot';
   const token = user.token_vinculacion || 'VIN-0000';
   const linkCommand = `/start ${token}`;
   const directTelegramUrl = `https://t.me/${botUsername}?start=${token}`;
