@@ -134,6 +134,13 @@ export default function Sidebar({ user }: SidebarProps) {
           </li>
         </ul>
       </nav>
+
+      {isAdmin && (
+        <div className="mt-auto pt-4 border-t border-white/10 flex items-center gap-2 text-[11px] text-[#8892b0] font-mono">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>SpendBot Admin v1.0</span>
+        </div>
+      )}
     </aside>
   );
 }
