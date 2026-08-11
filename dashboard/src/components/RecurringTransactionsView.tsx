@@ -11,7 +11,8 @@ import {
   XCircle,
   Clock,
   TrendingDown,
-  TrendingUp
+  TrendingUp,
+  Calendar
 } from 'lucide-react';
 
 interface RecurringTransaction {
@@ -50,11 +51,13 @@ export default function RecurringTransactionsView({
   const [formDia, setFormDia] = useState('1');
   const [formDuracion, setFormDuracion] = useState('indefinido');
 
+  // Formato Monetario Uniforme con 2 Decimales ($ 0,00)
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-AR', {
       style: 'currency',
       currency: 'ARS',
-      maximumFractionDigits: 0
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }).format(amount);
   };
 
@@ -130,88 +133,130 @@ export default function RecurringTransactionsView({
     .reduce((acc, r) => acc + r.monto, 0);
 
   return (
-    <div>
-      {/* Resumen KPI Estilo SpendBot Native */}
-      <div className="metrics-grid">
-        <div className="metric-card glass-panel">
-          <div className="metric-icon secondary-bg">
-            <TrendingDown size={24} />
+    <div className="flex flex-col gap-6">
+      {/* 1. KPI Cards con Tipografía Unificada y Espaciado Inferior Respirable */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6" style={{ marginBottom: '1.75rem' }}>
+        <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800 flex items-center gap-4 shadow-sm">
+          <div className="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center justify-center flex-shrink-0">
+            <TrendingDown size={22} />
           </div>
-          <div className="metric-content">
-            <h3>Gastos Fijos Mensuales</h3>
-            <p className="metric-value monto-negativo">{formatCurrency(totalGastosRecurrentes)}</p>
-          </div>
-        </div>
-
-        <div className="metric-card glass-panel">
-          <div className="metric-icon success-bg">
-            <TrendingUp size={24} />
-          </div>
-          <div className="metric-content">
-            <h3>Ingresos Fijos Mensuales</h3>
-            <p className="metric-value monto-positivo">{formatCurrency(totalIngresosRecurrentes)}</p>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-xs text-slate-400 font-medium mb-1">Gastos Fijos Mensuales</h3>
+            <p className="text-2xl font-bold text-rose-400 truncate">{formatCurrency(totalGastosRecurrentes)}</p>
           </div>
         </div>
 
-        <div className="metric-card glass-panel">
-          <div className="metric-icon primary-bg">
-            <Repeat size={24} />
+        <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800 flex items-center gap-4 shadow-sm">
+          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+            <TrendingUp size={22} />
           </div>
-          <div className="metric-content">
-            <h3>Transacciones Programadas</h3>
-            <p className="metric-value">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-xs text-slate-400 font-medium mb-1">Ingresos Fijos Mensuales</h3>
+            <p className="text-2xl font-bold text-emerald-400 truncate">{formatCurrency(totalIngresosRecurrentes)}</p>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800 flex items-center gap-4 shadow-sm">
+          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center flex-shrink-0">
+            <Repeat size={22} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-xs text-slate-400 font-medium mb-1">Transacciones Programadas</h3>
+            <p className="text-2xl font-bold text-white truncate">
               {recurrentes.filter(r => r.activo === 1).length}
             </p>
-            <span className="metric-subtitle">{recurrentes.length} total programadas</span>
+            <span className="text-xs text-slate-500 mt-1 block truncate">{recurrentes.length} total programadas</span>
           </div>
         </div>
       </div>
 
-      {/* Toolbar de Filtros y Acción Programar */}
-      <div className="recent-transactions glass-panel" style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button
-              onClick={() => setFilter('TODAS')}
-              className={`btn-secondary ${filter === 'TODAS' ? 'active' : ''}`}
-              style={filter === 'TODAS' ? { background: 'rgba(99, 102, 241, 0.2)', borderColor: 'var(--primary)', color: '#fff' } : {}}
-            >
-              Todas ({recurrentes.length})
-            </button>
-            <button
-              onClick={() => setFilter('ACTIVAS')}
-              className={`btn-secondary ${filter === 'ACTIVAS' ? 'active' : ''}`}
-              style={filter === 'ACTIVAS' ? { background: 'rgba(16, 185, 129, 0.2)', borderColor: 'var(--success)', color: '#10b981' } : {}}
-            >
-              Activas ({recurrentes.filter(r => r.activo === 1).length})
-            </button>
-            <button
-              onClick={() => setFilter('PAUSADAS')}
-              className={`btn-secondary ${filter === 'PAUSADAS' ? 'active' : ''}`}
-              style={filter === 'PAUSADAS' ? { background: 'rgba(245, 158, 11, 0.2)', borderColor: 'var(--warning)', color: '#fbbf24' } : {}}
-            >
-              Pausadas ({recurrentes.filter(r => r.activo === 0).length})
-            </button>
-          </div>
-
+      {/* 2. Barra de Filtros y Acción Programar con Espaciado Respirable */}
+      <div className="w-full flex flex-col md:flex-row items-center justify-between gap-3 mb-6 p-1 bg-slate-900/30 rounded-xl border border-slate-800/80 p-3">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           <button
-            onClick={() => setShowModal(true)}
-            className="btn-primary"
+            onClick={() => setFilter('TODAS')}
+            className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              filter === 'TODAS'
+                ? 'bg-purple-600/20 border border-purple-500/40 text-purple-300 shadow-sm'
+                : 'bg-slate-900/60 border border-slate-800 text-slate-400 hover:text-white'
+            }`}
           >
-            <Plus size={18} /> Programar Recurrente
+            Todas ({recurrentes.length})
+          </button>
+          <button
+            onClick={() => setFilter('ACTIVAS')}
+            className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              filter === 'ACTIVAS'
+                ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 shadow-sm'
+                : 'bg-slate-900/60 border border-slate-800 text-slate-400 hover:text-white'
+            }`}
+          >
+            Activas ({recurrentes.filter(r => r.activo === 1).length})
+          </button>
+          <button
+            onClick={() => setFilter('PAUSADAS')}
+            className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              filter === 'PAUSADAS'
+                ? 'bg-amber-500/20 border border-amber-500/40 text-amber-400 shadow-sm'
+                : 'bg-slate-900/60 border border-slate-800 text-slate-400 hover:text-white'
+            }`}
+          >
+            Pausadas ({recurrentes.filter(r => r.activo === 0).length})
           </button>
         </div>
+
+        <button
+          onClick={() => setShowModal(true)}
+          className="w-full md:w-auto px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-105"
+        >
+          <Plus size={16} />
+          <span>Programar Recurrente</span>
+        </button>
       </div>
 
-      {/* Grilla de Tarjetas Recurrentes Estilo SpendBot Native */}
+      {/* 3. Empty State o Grilla de Tarjetas Recurrentes */}
       {filteredRecurrentes.length === 0 ? (
-        <div className="recent-transactions glass-panel" style={{ textAlign: 'center', padding: '3rem', color: '#8892b0' }}>
-          <Clock size={36} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-          <h3 style={{ color: '#fff', marginBottom: '0.5rem' }}>No se encontraron transacciones recurrentes</h3>
-          <p style={{ fontSize: '0.875rem' }}>Presiona "Programar Recurrente" para programar tus alquileres, servicios o sueldos fijados.</p>
+        /* Empty State con Contenedor Vertical Estricto (Sin superposición) */
+        <div className="w-full rounded-2xl bg-slate-900/40 border border-slate-800/80 my-2">
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '1rem',
+              padding: '3rem 1rem',
+              textAlign: 'center'
+            }}
+            className="w-full flex flex-col items-center justify-center py-12 px-4 text-center gap-4"
+          >
+            <div className="p-3 bg-purple-950/40 border border-purple-800/30 rounded-xl mb-1 text-purple-400">
+              <Clock className="w-6 h-6 text-purple-400" />
+            </div>
+
+            <h3 className="text-base font-semibold text-white mb-1">
+              No se encontraron transacciones recurrentes
+            </h3>
+
+            <p
+              style={{ marginBottom: '1.5rem' }}
+              className="text-sm text-slate-400 max-w-md mb-6 leading-relaxed"
+            >
+              Presioná "Programar Recurrente" para programar tus alquileres, servicios o sueldos fijados.
+            </p>
+
+            <button
+              onClick={() => setShowModal(true)}
+              style={{ marginTop: '0.5rem', display: 'inline-flex' }}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 mt-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Programar Recurrente</span>
+            </button>
+          </div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
           {filteredRecurrentes.map((rec) => {
             const isGasto = rec.tipo === 'GASTO';
             const isActivo = rec.activo === 1;
@@ -222,52 +267,50 @@ export default function RecurringTransactionsView({
             return (
               <div
                 key={rec.id}
-                className="glass-panel"
-                style={{
-                  padding: '1.5rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  opacity: isActivo ? 1 : 0.65
-                }}
+                className="p-5 rounded-2xl bg-slate-900/50 border border-slate-800 flex flex-col justify-between transition-all hover:border-slate-700 shadow-sm"
+                style={{ opacity: isActivo ? 1 : 0.7 }}
               >
                 <div>
                   {/* Encabezado */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <span className="category-badge" style={{ background: isGasto ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)', color: isGasto ? '#ef4444' : '#10b981', borderColor: isGasto ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)' }}>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className={`px-2.5 py-1 rounded-md text-[11px] font-extrabold tracking-wider border ${
+                      isGasto ? 'bg-rose-500/10 border-rose-500/30 text-rose-400' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                    }`}>
                       {isGasto ? '🔴 GASTO' : '🟢 INGRESO'}
                     </span>
-                    <span style={{ fontSize: '0.8rem', color: '#8892b0' }}>
+                    <span className="text-xs text-slate-400 font-mono">
                       Día {rec.dia_cobro} de c/mes
                     </span>
                   </div>
 
                   {/* Nombre y Monto */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1rem' }}>
+                  <div className="flex items-start justify-between gap-3 mb-4">
                     <div>
-                      <h4 style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.25rem' }}>
+                      <h4 className="text-base font-bold text-white mb-0.5">
                         {rec.descripcion}
                       </h4>
-                      <p style={{ color: '#8892b0', fontSize: '0.85rem' }}>
-                        {rec.categoriaEmoji} {rec.categoriaNombre || 'Categoría'}
+                      <p className="text-xs text-slate-400">
+                        {rec.categoriaEmoji ? `${rec.categoriaEmoji} ` : ''}{rec.categoriaNombre || 'Categoría'}
                       </p>
                     </div>
 
-                    <div style={{ textAlign: 'right' }}>
-                      <span className={`amount-cell ${isGasto ? 'monto-negativo' : 'monto-positivo'}`} style={{ fontSize: '1.25rem' }}>
+                    <div className="text-right">
+                      <span className={`text-lg font-bold ${isGasto ? 'text-rose-400' : 'text-emerald-400'}`}>
                         {isGasto ? '-' : '+'}{formatCurrency(rec.monto)}
                       </span>
                     </div>
                   </div>
 
                   {/* Estado / Duración */}
-                  <div style={{ padding: '0.75rem 0', borderTop: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#8892b0' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <Clock size={14} style={{ color: '#818cf8' }} />
-                      {durStr}
+                  <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                    <span className="flex items-center gap-1.5">
+                      <Clock size={14} className="text-indigo-400" />
+                      <span>{durStr}</span>
                     </span>
 
-                    <span className="dash-badge text-xs font-semibold !rounded-full" style={{ background: isActivo ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)', color: isActivo ? '#10b981' : '#f59e0b', border: isActivo ? '1px solid rgba(16, 185, 129, 0.25)' : '1px solid rgba(245, 158, 11, 0.25)' }}>
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                      isActivo ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                    }`}>
                       {isActivo ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
                       <span>{isActivo ? 'Activa' : 'Pausada'}</span>
                     </span>
@@ -275,21 +318,20 @@ export default function RecurringTransactionsView({
                 </div>
 
                 {/* Acciones */}
-                <div style={{ paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                <div className="pt-4 mt-4 border-t border-slate-800 flex items-center justify-end gap-2">
                   <button
                     disabled={loading}
                     onClick={() => handleToggleState(rec.id)}
-                    className="btn-secondary"
+                    className="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-white text-xs font-medium border border-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    {isActivo ? <Pause size={14} style={{ color: '#f59e0b' }} /> : <Play size={14} style={{ color: '#10b981' }} />}
+                    {isActivo ? <Pause size={14} className="text-amber-400" /> : <Play size={14} className="text-emerald-400" />}
                     <span>{isActivo ? 'Pausar' : 'Activar'}</span>
                   </button>
 
                   <button
                     disabled={loading}
                     onClick={() => handleDelete(rec.id)}
-                    className="btn-secondary"
-                    style={{ color: '#ef4444' }}
+                    className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition-colors cursor-pointer"
                     title="Eliminar"
                   >
                     <Trash2 size={14} />
@@ -301,7 +343,7 @@ export default function RecurringTransactionsView({
         </div>
       )}
 
-      {/* Modal Programar Recurrente Estilo Native SpendBot */}
+      {/* Modal Programar Recurrente */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
