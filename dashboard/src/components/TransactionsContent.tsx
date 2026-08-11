@@ -119,9 +119,9 @@ export default function TransactionsContent({ initialData, categories }: Transac
 
       {/* Pestañas de Contenido */}
       {activeTab === 'historial' ? (
-        <div>
+        <div className="flex flex-col gap-6">
           {/* KPI Cards con Tipografía y Estructura Unificada */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" style={{ marginBottom: '1.75rem' }}>
             <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800 flex items-center gap-4 shadow-sm">
               <div className="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center flex-shrink-0">
                 <Wallet size={22} />
@@ -164,11 +164,13 @@ export default function TransactionsContent({ initialData, categories }: Transac
             </div>
           </div>
 
-          <TransactionsTable
-            transactions={data.recent}
-            categories={categories}
-            onNewTransaction={() => setShowModal(true)}
-          />
+          <div className="mt-6" style={{ marginTop: '1.75rem' }}>
+            <TransactionsTable
+              transactions={data.recent}
+              categories={categories}
+              onNewTransaction={() => setShowModal(true)}
+            />
+          </div>
         </div>
       ) : (
         <RecurringTransactionsView
