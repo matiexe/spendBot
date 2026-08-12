@@ -40,8 +40,14 @@ function resolveDatabasePath(): string {
   }
 
   const cwd = process.cwd();
-  if (cwd.endsWith('dashboard') || cwd.endsWith('dashboard/')) {
-    return path.resolve(cwd, '../gastos.db');
+
+  // Si se ejecuta desde el subdirectorio dashboard o cualquier subnivel
+  if (cwd.includes('dashboard')) {
+    const rootDir = cwd.split('dashboard')[0];
+    const candidate = path.join(rootDir, 'gastos.db');
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
   }
 
   const rootDb = path.resolve(cwd, 'gastos.db');
@@ -162,28 +168,28 @@ export function registerUser(nombre: string, email: string, plainPassword: strin
   };
 }
 
-export function loginUser(email: string, password: string) {
+export function loginUser(emailOrUsername: string, password: string) {
   const db = getDb();
-  const cleanEmail = email.toLowerCase().trim();
+  const cleanInput = emailOrUsername.toLowerCase().trim();
   const password_hash = hashPassword(password);
   
   const user = db.prepare(`
     SELECT id_usuario, nombre, email, password_hash, telegram_id, token_vinculacion, COALESCE(rol, 'USER') as rol
-    FROM usuarios WHERE LOWER(email) = ?
-  `).get(cleanEmail) as any;
+    FROM usuarios WHERE LOWER(email) = ? OR LOWER(username) = ?
+  `).get(cleanInput, cleanInput) as any;
 
   if (!user) {
-    throw new Error('El usuario no existe o el correo electrónico es incorrecto.');
+    throw new Error('El usuario no existe o las credenciales ingresadas son incorrectas.');
   }
 
-  if (user.password_hash !== password_hash) {
-    throw new Error('La contraseña ingresada es incorrecta.');
+  if (user.password_hash && user.password_hash !== password_hash) {
+    throw new Error('La contraseña ingresada es incorrecta. Por favor verificá tus datos.');
   }
 
   return {
     id_usuario: user.id_usuario,
     nombre: user.nombre,
-    email: user.email,
+    email: user.email || user.nombre,
     telegram_id: user.telegram_id,
     token_vinculacion: user.token_vinculacion,
     rol: user.rol as 'ADMIN' | 'USER'
@@ -415,7 +421,7 @@ export function getAdminStats() {
   const users = db.prepare(`
     SELECT 
       u.id_usuario,
-      COALESCE(u.nombre, 'Usuario #' || u.id_usuario) as nombre,
+      COALESCE(NULLIF(TRIM(u.nombre), ''), 'Usuario #' || u.id_usuario) as nombre,
       u.email,
       u.telegram_id,
       u.token_vinculacion,
@@ -424,7 +430,7 @@ export function getAdminStats() {
       COUNT(g.id) as totalTransacciones,
       COALESCE(SUM(g.monto), 0) as totalGastos
     FROM usuarios u
-    LEFT JOIN gastos g ON u.id_usuario = g.id_usuario
+    LEFT JOIN gastos g ON CAST(u.id_usuario AS TEXT) = CAST(g.id_usuario AS TEXT)
     GROUP BY u.id_usuario
     ORDER BY u.id_usuario DESC
   `).all() as Array<{

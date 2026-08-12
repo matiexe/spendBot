@@ -180,18 +180,29 @@ def vincular_telegram(telegram_id, username, token_vinculacion):
     """Vincula un usuario de Telegram a su cuenta de Web utilizando el token VIN-XXXX"""
     conn = sqlite3.connect(DATABASE_FILE)
     cursor = conn.cursor()
-    cursor.execute('SELECT id_usuario, nombre FROM usuarios WHERE token_vinculacion = ?', (token_vinculacion.strip(),))
+    cursor.execute('SELECT id_usuario, nombre FROM usuarios WHERE token_vinculacion = ?', (token_vinculacion.strip().upper(),))
     user = cursor.fetchone()
     if user:
+        target_user_id = user[0]
+        
+        # Liberar telegram_id si pertenecía a una cuenta temporal previa y migrar sus gastos
+        cursor.execute('SELECT id_usuario FROM usuarios WHERE telegram_id = ? OR id_usuario = ?', (telegram_id, telegram_id))
+        old_user = cursor.fetchone()
+        if old_user and old_user[0] != target_user_id:
+            old_id = old_user[0]
+            cursor.execute('UPDATE gastos SET id_usuario = ? WHERE id_usuario = ?', (target_user_id, old_id))
+            cursor.execute('UPDATE transacciones_recurrentes SET id_usuario = ? WHERE id_usuario = ?', (target_user_id, old_id))
+            cursor.execute('DELETE FROM usuarios WHERE id_usuario = ?', (old_id,))
+
         cursor.execute(
             '''UPDATE usuarios 
                SET telegram_id = ?, username = ?, token_vinculacion = NULL 
                WHERE id_usuario = ?''',
-            (telegram_id, username, user[0])
+            (telegram_id, username, target_user_id)
         )
         conn.commit()
         conn.close()
-        return {'id_usuario': user[0], 'nombre': user[1]}
+        return {'id_usuario': target_user_id, 'nombre': user[1]}
     conn.close()
     return None
 
