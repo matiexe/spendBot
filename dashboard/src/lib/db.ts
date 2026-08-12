@@ -415,7 +415,7 @@ export function getAdminStats() {
   const users = db.prepare(`
     SELECT 
       u.id_usuario,
-      u.nombre,
+      COALESCE(u.nombre, 'Usuario #' || u.id_usuario) as nombre,
       u.email,
       u.telegram_id,
       u.token_vinculacion,

@@ -56,12 +56,15 @@ export default function AdminDashboardContent({ stats }: AdminDashboardContentPr
     }
   };
 
-  const filteredUsers = stats.users.filter(u => {
-    const term = searchTerm.toLowerCase();
+  const filteredUsers = (stats?.users || []).filter(u => {
+    const term = (searchTerm || '').toLowerCase();
+    const nameStr = (u.nombre || '').toLowerCase();
+    const emailStr = (u.email || '').toLowerCase();
+    const tokenStr = (u.token_vinculacion || '').toLowerCase();
     return (
-      u.nombre.toLowerCase().includes(term) ||
-      (u.email && u.email.toLowerCase().includes(term)) ||
-      (u.token_vinculacion && u.token_vinculacion.toLowerCase().includes(term))
+      nameStr.includes(term) ||
+      emailStr.includes(term) ||
+      tokenStr.includes(term)
     );
   });
 
