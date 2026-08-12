@@ -62,7 +62,8 @@ export async function PATCH(request: Request) {
     if (!id) {
       return NextResponse.json({ success: false, error: 'ID es requerido' }, { status: 400 });
     }
-    toggleRecurringTransaction(parseInt(id, 10));
+    const userId = await getSessionUserId();
+    toggleRecurringTransaction(parseInt(id, 10), userId || undefined);
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -76,7 +77,8 @@ export async function DELETE(request: Request) {
     if (!id) {
       return NextResponse.json({ success: false, error: 'ID es requerido' }, { status: 400 });
     }
-    deleteRecurringTransaction(parseInt(id, 10));
+    const userId = await getSessionUserId();
+    deleteRecurringTransaction(parseInt(id, 10), userId || undefined);
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

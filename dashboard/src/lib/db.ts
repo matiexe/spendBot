@@ -384,8 +384,15 @@ export function createRecurringTransaction(data: {
   );
 }
 
-export function toggleRecurringTransaction(id: number) {
+export function toggleRecurringTransaction(id: number, userId?: number) {
   const db = getDb();
+  if (userId) {
+    return db.prepare(`
+      UPDATE transacciones_recurrentes
+      SET activo = CASE WHEN activo = 1 THEN 0 ELSE 1 END
+      WHERE id = ? AND id_usuario = ?
+    `).run(id, userId);
+  }
   return db.prepare(`
     UPDATE transacciones_recurrentes
     SET activo = CASE WHEN activo = 1 THEN 0 ELSE 1 END
@@ -393,8 +400,11 @@ export function toggleRecurringTransaction(id: number) {
   `).run(id);
 }
 
-export function deleteRecurringTransaction(id: number) {
+export function deleteRecurringTransaction(id: number, userId?: number) {
   const db = getDb();
+  if (userId) {
+    return db.prepare('DELETE FROM transacciones_recurrentes WHERE id = ? AND id_usuario = ?').run(id, userId);
+  }
   return db.prepare('DELETE FROM transacciones_recurrentes WHERE id = ?').run(id);
 }
 
