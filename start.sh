@@ -3,6 +3,11 @@ echo "=========================================="
 echo "🚀 Iniciando SpendBot Suite en Producción..."
 echo "=========================================="
 
+# Exportar ruta absoluta unificada para la base de datos en producción
+ROOT_DIR=$(pwd)
+export DATABASE_PATH="${ROOT_DIR}/gastos.db"
+echo "📂 Ruta de base de datos en producción: $DATABASE_PATH"
+
 # 1. Inicializar la base de datos SQLite y verificar tablas
 python database.py
 
