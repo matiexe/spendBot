@@ -25,7 +25,7 @@ export const revalidate = 0;
 export async function GET() {
   try {
     const userId = await getSessionUserId();
-    const recurrentes = getRecurringTransactions(userId || undefined);
+    const recurrentes = await getRecurringTransactions(userId || undefined);
     return NextResponse.json({ success: true, data: recurrentes });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Faltan campos obligatorios' }, { status: 400 });
     }
 
-    createRecurringTransaction({
+    await createRecurringTransaction({
       id_usuario: userId || 1,
       tipo,
       monto: parseFloat(monto),
@@ -66,7 +66,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: false, error: 'ID es requerido' }, { status: 400 });
     }
     const userId = await getSessionUserId();
-    toggleRecurringTransaction(parseInt(id, 10), userId || undefined);
+    await toggleRecurringTransaction(parseInt(id, 10), userId || undefined);
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -81,7 +81,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, error: 'ID es requerido' }, { status: 400 });
     }
     const userId = await getSessionUserId();
-    deleteRecurringTransaction(parseInt(id, 10), userId || undefined);
+    await deleteRecurringTransaction(parseInt(id, 10), userId || undefined);
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

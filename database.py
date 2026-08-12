@@ -1,6 +1,5 @@
-# database.py - Gestión de la base de datos
-
 import sqlite3
+import os
 from datetime import datetime, timedelta
 from pathlib import Path
 import logging
@@ -9,11 +8,23 @@ logger = logging.getLogger(__name__)
 
 DATABASE_FILE = 'gastos.db'
 
+def get_db_connection():
+    db_url = os.getenv('DATABASE_URL', '')
+    if db_url.startswith('postgres://') or db_url.startswith('postgresql://'):
+        import psycopg
+        if db_url.startswith('postgres://'):
+            db_url = db_url.replace('postgres://', 'postgresql://', 1)
+        conn = psycopg.connect(db_url)
+        return conn, True
+    else:
+        conn = sqlite3.connect(DATABASE_FILE)
+        return conn, False
+
 # ============= INICIALIZACIÓN DE LA BASE DE DATOS =============
 
 def inicializar_bd():
     """Crea las tablas si no existen"""
-    conn = sqlite3.connect(DATABASE_FILE)
+    conn, is_pg = get_db_connection()
     cursor = conn.cursor()
     
     # Tabla de usuarios con campos para Registro Web + Telegram + Rol

@@ -23,7 +23,7 @@ export default async function Home() {
     return <LandingPage />;
   }
 
-  const user = session?.userId ? getUserById(session.userId) : null;
+  const user = session?.userId ? await getUserById(session.userId) : null;
   if (!user) {
     return <LandingPage />;
   }
@@ -33,7 +33,7 @@ export default async function Home() {
     redirect('/admin');
   }
 
-  const data = getDashboardData(user.id_usuario);
+  const data = await getDashboardData(user.id_usuario);
 
   return (
     <DashboardLayoutShell user={user}>

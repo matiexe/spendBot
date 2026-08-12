@@ -14,7 +14,7 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'No autorizado' }, { status: 401 });
     }
 
-    const stats = getAdminStats();
+    const stats = await getAdminStats();
     return NextResponse.json({ success: true, data: stats });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || 'Error al obtener datos administrativos' }, { status: 500 });

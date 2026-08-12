@@ -22,7 +22,7 @@ export default async function TransactionsPage() {
     redirect('/login');
   }
 
-  const user = session?.userId ? getUserById(session.userId) : null;
+  const user = session?.userId ? await getUserById(session.userId) : null;
   if (!user) {
     redirect('/login');
   }
@@ -32,8 +32,8 @@ export default async function TransactionsPage() {
     redirect('/admin');
   }
 
-  const data = getDashboardData(user.id_usuario);
-  const categories = getCategories();
+  const data = await getDashboardData(user.id_usuario);
+  const categories = await getCategories();
 
   return (
     <DashboardLayoutShell user={user}>

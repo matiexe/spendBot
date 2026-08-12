@@ -1,9 +1,11 @@
+import { Pool } from 'pg';
 import Database from 'better-sqlite3';
 import path from 'path';
 import crypto from 'crypto';
 import fs from 'fs';
 
-let dbInstance: Database.Database | null = null;
+let pgPool: Pool | null = null;
+let sqliteDb: Database.Database | null = null;
 
 export interface User {
   id_usuario: number;
@@ -30,6 +32,27 @@ export interface Expense {
   usuarioNombre?: string;
 }
 
+export function isPgMode(): boolean {
+  const url = process.env.DATABASE_URL || '';
+  return url.startsWith('postgres://') || url.startsWith('postgresql://');
+}
+
+export function getPgPool(): Pool {
+  if (!pgPool) {
+    let connectionString = process.env.DATABASE_URL || '';
+    if (connectionString.startsWith('postgres://')) {
+      connectionString = connectionString.replace('postgres://', 'postgresql://');
+    }
+    pgPool = new Pool({
+      connectionString,
+      ssl: process.env.NODE_ENV === 'production' || connectionString.includes('sslmode=') || connectionString.includes('neon.tech') || connectionString.includes('supabase')
+        ? { rejectUnauthorized: false }
+        : undefined
+    });
+  }
+  return pgPool;
+}
+
 function resolveDatabasePath(): string {
   if (process.env.DATABASE_PATH) {
     return path.resolve(process.env.DATABASE_PATH);
@@ -40,75 +63,52 @@ function resolveDatabasePath(): string {
   }
 
   const cwd = process.cwd();
-
-  // Si se ejecuta desde el subdirectorio dashboard o cualquier subnivel
   if (cwd.includes('dashboard')) {
     const rootDir = cwd.split('dashboard')[0];
     const candidate = path.join(rootDir, 'gastos.db');
-    if (fs.existsSync(candidate)) {
-      return candidate;
-    }
+    if (fs.existsSync(candidate)) return candidate;
+    return candidate;
   }
 
   const rootDb = path.resolve(cwd, 'gastos.db');
-  if (fs.existsSync(rootDb)) {
-    return rootDb;
-  }
+  if (fs.existsSync(rootDb)) return rootDb;
 
   const parentDb = path.resolve(cwd, '../gastos.db');
-  if (fs.existsSync(parentDb)) {
-    return parentDb;
-  }
+  if (fs.existsSync(parentDb)) return parentDb;
 
   return rootDb;
 }
 
-export function getDb(): Database.Database {
-  if (!dbInstance) {
+export function getSqliteDb(): Database.Database {
+  if (!sqliteDb) {
     const dbPath = resolveDatabasePath();
-    dbInstance = new Database(dbPath);
-    dbInstance.pragma('journal_mode = WAL');
+    sqliteDb = new Database(dbPath);
+    sqliteDb.pragma('journal_mode = WAL');
 
-    // Auto-migración defensiva
     try {
-      const columns = dbInstance.prepare("PRAGMA table_info(usuarios)").all() as any[];
+      const columns = sqliteDb.prepare("PRAGMA table_info(usuarios)").all() as any[];
       const colNames = columns.map(c => c.name);
 
-      if (!colNames.includes('email')) {
-        dbInstance.exec("ALTER TABLE usuarios ADD COLUMN email TEXT");
-      }
-      if (!colNames.includes('password_hash')) {
-        dbInstance.exec("ALTER TABLE usuarios ADD COLUMN password_hash TEXT");
-      }
-      if (!colNames.includes('telegram_id')) {
-        dbInstance.exec("ALTER TABLE usuarios ADD COLUMN telegram_id INTEGER");
-      }
-      if (!colNames.includes('token_vinculacion')) {
-        dbInstance.exec("ALTER TABLE usuarios ADD COLUMN token_vinculacion TEXT");
-      }
-      if (!colNames.includes('rol')) {
-        dbInstance.exec("ALTER TABLE usuarios ADD COLUMN rol TEXT DEFAULT 'USER'");
-      }
+      if (!colNames.includes('email')) sqliteDb.exec("ALTER TABLE usuarios ADD COLUMN email TEXT");
+      if (!colNames.includes('password_hash')) sqliteDb.exec("ALTER TABLE usuarios ADD COLUMN password_hash TEXT");
+      if (!colNames.includes('telegram_id')) sqliteDb.exec("ALTER TABLE usuarios ADD COLUMN telegram_id INTEGER");
+      if (!colNames.includes('token_vinculacion')) sqliteDb.exec("ALTER TABLE usuarios ADD COLUMN token_vinculacion TEXT");
+      if (!colNames.includes('rol')) sqliteDb.exec("ALTER TABLE usuarios ADD COLUMN rol TEXT DEFAULT 'USER'");
 
-      // Seeding automático de cuenta Administrador
-      const adminExists = dbInstance.prepare("SELECT id_usuario FROM usuarios WHERE email = 'admin@spendbot.com'").get();
+      const adminExists = sqliteDb.prepare("SELECT id_usuario FROM usuarios WHERE email = 'admin@spendbot.com'").get();
       if (!adminExists) {
         const adminPassHash = hashPassword('admin123');
-        dbInstance.prepare(`
+        sqliteDb.prepare(`
           INSERT INTO usuarios (nombre, email, password_hash, rol)
           VALUES (?, ?, ?, ?)
         `).run('Administrador', 'admin@spendbot.com', adminPassHash, 'ADMIN');
       }
 
-      // Auto-migración defensiva para la tabla gastos (columna 'tipo')
-      const columnsGastos = dbInstance.prepare("PRAGMA table_info(gastos)").all() as any[];
+      const columnsGastos = sqliteDb.prepare("PRAGMA table_info(gastos)").all() as any[];
       const colNamesGastos = columnsGastos.map(c => c.name);
-      if (!colNamesGastos.includes('tipo')) {
-        dbInstance.exec("ALTER TABLE gastos ADD COLUMN tipo TEXT DEFAULT 'GASTO'");
-      }
+      if (!colNamesGastos.includes('tipo')) sqliteDb.exec("ALTER TABLE gastos ADD COLUMN tipo TEXT DEFAULT 'GASTO'");
 
-      // Tabla de transacciones recurrentes
-      dbInstance.exec(`
+      sqliteDb.exec(`
         CREATE TABLE IF NOT EXISTS transacciones_recurrentes (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           id_usuario INTEGER,
@@ -123,29 +123,54 @@ export function getDb(): Database.Database {
         );
       `);
     } catch (e) {
-      console.error("Error en auto-migración DB:", e);
+      console.error("Error en auto-migración SQLite:", e);
     }
   }
-  return dbInstance;
+  return sqliteDb;
+}
+
+export function getDb(): Database.Database {
+  return getSqliteDb();
 }
 
 export function hashPassword(password: string): string {
   return crypto.createHash('sha256').update(password).digest('hex');
 }
 
-export function registerUser(nombre: string, email: string, plainPassword: string) {
-  const db = getDb();
+export async function queryDb(sql: string, params: any[] = []): Promise<any[]> {
+  if (isPgMode()) {
+    const pool = getPgPool();
+    let paramIdx = 1;
+    const pgSql = sql.replace(/\?/g, () => `$${paramIdx++}`);
+    const res = await pool.query(pgSql, params);
+    return res.rows;
+  } else {
+    const db = getSqliteDb();
+    const cleanSql = sql.trim().toUpperCase();
+    if (cleanSql.startsWith('SELECT') || cleanSql.startsWith('PRAGMA')) {
+      return db.prepare(sql).all(...params) as any[];
+    } else {
+      const info = db.prepare(sql).run(...params);
+      return [{ lastInsertRowid: info.lastInsertRowid, changes: info.changes }];
+    }
+  }
+}
+
+export async function getOneDb(sql: string, params: any[] = []): Promise<any | undefined> {
+  const rows = await queryDb(sql, params);
+  return rows[0];
+}
+
+export async function registerUser(nombre: string, email: string, plainPassword: string) {
   const cleanEmail = email.toLowerCase().trim();
   const cleanNombre = nombre.trim();
 
-  // Validar formato de correo electrónico
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(cleanEmail)) {
     throw new Error('Por favor ingresá un correo electrónico válido (ej: usuario@dominio.com).');
   }
 
-  // Validar duplicado de correo electrónico (Case Insensitive)
-  const existing = db.prepare('SELECT id_usuario FROM usuarios WHERE LOWER(email) = ?').get(cleanEmail);
+  const existing = await getOneDb('SELECT id_usuario FROM usuarios WHERE LOWER(email) = ?', [cleanEmail]);
   if (existing) {
     throw new Error('El correo electrónico ya está registrado. Por favor iniciá sesión o probá con otro correo.');
   }
@@ -153,14 +178,15 @@ export function registerUser(nombre: string, email: string, plainPassword: strin
   const password_hash = hashPassword(plainPassword);
   const token_vinculacion = 'VIN-' + crypto.randomBytes(3).toString('hex').toUpperCase();
 
-  const stmt = db.prepare(`
+  const res = await queryDb(`
     INSERT INTO usuarios (nombre, email, password_hash, token_vinculacion, rol)
     VALUES (?, ?, ?, ?, 'USER')
-  `);
+  `, [cleanNombre, cleanEmail, password_hash, token_vinculacion]);
   
-  const result = stmt.run(cleanNombre, cleanEmail, password_hash, token_vinculacion);
+  const id_usuario = res[0]?.id_usuario || Number(res[0]?.lastInsertRowid || 1);
+
   return {
-    id_usuario: Number(result.lastInsertRowid),
+    id_usuario,
     nombre: cleanNombre,
     email: cleanEmail,
     token_vinculacion,
@@ -168,15 +194,14 @@ export function registerUser(nombre: string, email: string, plainPassword: strin
   };
 }
 
-export function loginUser(emailOrUsername: string, password: string) {
-  const db = getDb();
+export async function loginUser(emailOrUsername: string, password: string) {
   const cleanInput = emailOrUsername.toLowerCase().trim();
   const password_hash = hashPassword(password);
   
-  const user = db.prepare(`
+  const user = await getOneDb(`
     SELECT id_usuario, nombre, email, password_hash, telegram_id, token_vinculacion, COALESCE(rol, 'USER') as rol
     FROM usuarios WHERE LOWER(email) = ? OR LOWER(username) = ?
-  `).get(cleanInput, cleanInput) as any;
+  `, [cleanInput, cleanInput]);
 
   if (!user) {
     throw new Error('El usuario no existe o las credenciales ingresadas son incorrectas.');
@@ -187,31 +212,33 @@ export function loginUser(emailOrUsername: string, password: string) {
   }
 
   return {
-    id_usuario: user.id_usuario,
+    id_usuario: Number(user.id_usuario),
     nombre: user.nombre,
     email: user.email || user.nombre,
-    telegram_id: user.telegram_id,
+    telegram_id: user.telegram_id ? Number(user.telegram_id) : null,
     token_vinculacion: user.token_vinculacion,
     rol: user.rol as 'ADMIN' | 'USER'
   };
 }
 
-export function getUserById(id_usuario: number) {
-  const db = getDb();
-  return db.prepare(`
+export async function getUserById(id_usuario: number) {
+  const u = await getOneDb(`
     SELECT id_usuario, nombre, email, telegram_id, token_vinculacion, fecha_creacion, COALESCE(rol, 'USER') as rol
     FROM usuarios WHERE id_usuario = ?
-  `).get(id_usuario) as User | undefined;
+  `, [id_usuario]);
+  if (!u) return undefined;
+  return {
+    ...u,
+    id_usuario: Number(u.id_usuario),
+    telegram_id: u.telegram_id ? Number(u.telegram_id) : undefined
+  } as User;
 }
 
-export function getDashboardData(userId?: number) {
-  const db = getDb();
-  
-  const userWhereClause = userId ? 'WHERE g.id_usuario = ?' : '';
-  const userParams = userId ? [userId] : [];
+export async function getDashboardData(userId?: number) {
+  const userWhereClause = userId ? 'WHERE CAST(g.id_usuario AS TEXT) = ?' : '';
+  const userParams = userId ? [String(userId)] : [];
 
-  // 1. Obtener gastos con categoría y usuario
-  const expenses = db.prepare(`
+  const expenses = await queryDb(`
     SELECT 
       g.id, g.id_usuario, g.monto, g.categoria_id, g.descripcion, g.fecha, g.cuenta, g.origen,
       COALESCE(g.tipo, 'GASTO') as tipo,
@@ -219,19 +246,17 @@ export function getDashboardData(userId?: number) {
       u.nombre as usuarioNombre
     FROM gastos g
     LEFT JOIN categorias c ON g.categoria_id = c.id
-    LEFT JOIN usuarios u ON g.id_usuario = u.id_usuario
+    LEFT JOIN usuarios u ON CAST(g.id_usuario AS TEXT) = CAST(u.id_usuario AS TEXT)
     ${userWhereClause}
     ORDER BY g.fecha DESC
     LIMIT 20
-  `).all(...userParams) as Expense[];
+  `, userParams);
 
-  // 2. Total general acumulado de gastos (para el usuario específico)
   const totalRow = userId 
-    ? db.prepare('SELECT SUM(monto) as total FROM gastos WHERE id_usuario = ?').get(userId) as { total: number }
-    : db.prepare('SELECT SUM(monto) as total FROM gastos').get() as { total: number };
-  const total = Math.abs(totalRow?.total || 0);
+    ? await getOneDb('SELECT SUM(monto) as total FROM gastos WHERE CAST(id_usuario AS TEXT) = ?', [String(userId)])
+    : await getOneDb('SELECT SUM(monto) as total FROM gastos');
+  const total = Math.abs(Number(totalRow?.total || 0));
 
-  // 3. Rango de fechas del mes actual
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth();
@@ -240,23 +265,20 @@ export function getDashboardData(userId?: number) {
   const firstDayPrevMonth = new Date(year, month - 1, 1).toISOString();
   const lastDayPrevMonth = new Date(year, month - 1, 0, 23, 59, 59).toISOString();
 
-  // 4. Totales del mes actual y del mes anterior (filtrados por id_usuario)
   const totalMonthRow = userId
-    ? db.prepare('SELECT SUM(monto) as totalMonth FROM gastos WHERE fecha >= ? AND id_usuario = ?').get(firstDayThisMonth, userId) as { totalMonth: number }
-    : db.prepare('SELECT SUM(monto) as totalMonth FROM gastos WHERE fecha >= ?').get(firstDayThisMonth) as { totalMonth: number };
-  const totalMonth = Math.abs(totalMonthRow?.totalMonth || 0);
+    ? await getOneDb('SELECT SUM(monto) as totalmonth FROM gastos WHERE fecha >= ? AND CAST(id_usuario AS TEXT) = ?', [firstDayThisMonth, String(userId)])
+    : await getOneDb('SELECT SUM(monto) as totalmonth FROM gastos WHERE fecha >= ?', [firstDayThisMonth]);
+  const totalMonth = Math.abs(Number(totalMonthRow?.totalmonth || totalMonthRow?.totalMonth || 0));
 
   const totalPrevMonthRow = userId
-    ? db.prepare('SELECT SUM(monto) as totalPrevMonth FROM gastos WHERE fecha >= ? AND fecha <= ? AND id_usuario = ?').get(firstDayPrevMonth, lastDayPrevMonth, userId) as { totalPrevMonth: number }
-    : db.prepare('SELECT SUM(monto) as totalPrevMonth FROM gastos WHERE fecha >= ? AND fecha <= ?').get(firstDayPrevMonth, lastDayPrevMonth) as { totalPrevMonth: number };
-  const totalPrevMonth = Math.abs(totalPrevMonthRow?.totalPrevMonth || 0);
+    ? await getOneDb('SELECT SUM(monto) as totalprevmonth FROM gastos WHERE fecha >= ? AND fecha <= ? AND CAST(id_usuario AS TEXT) = ?', [firstDayPrevMonth, lastDayPrevMonth, String(userId)])
+    : await getOneDb('SELECT SUM(monto) as totalprevmonth FROM gastos WHERE fecha >= ? AND fecha <= ?', [firstDayPrevMonth, lastDayPrevMonth]);
+  const totalPrevMonth = Math.abs(Number(totalPrevMonthRow?.totalprevmonth || totalPrevMonthRow?.totalPrevMonth || 0));
 
-  // 5. Cadena formateada del período (01/MM/YYYY ➔ DD/MM/YYYY)
   const lastDayThisMonthNum = new Date(year, month + 1, 0).getDate();
   const pad = (n: number) => n.toString().padStart(2, '0');
   const dateRangeStr = `01/${pad(month + 1)}/${year} ➔ ${pad(lastDayThisMonthNum)}/${pad(month + 1)}/${year}`;
 
-  // 6. Desglose mensual de los últimos 13 meses filtrados por usuario
   const monthsList = [];
   const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
@@ -269,17 +291,16 @@ export function getDashboardData(userId?: number) {
     const mEnd = new Date(mYear, mMonth + 1, 0, 23, 59, 59).toISOString();
 
     const row = userId
-      ? db.prepare('SELECT SUM(monto) as total FROM gastos WHERE fecha >= ? AND fecha <= ? AND id_usuario = ?').get(mStart, mEnd, userId) as { total: number }
-      : db.prepare('SELECT SUM(monto) as total FROM gastos WHERE fecha >= ? AND fecha <= ?').get(mStart, mEnd) as { total: number };
+      ? await getOneDb('SELECT SUM(monto) as total FROM gastos WHERE fecha >= ? AND fecha <= ? AND CAST(id_usuario AS TEXT) = ?', [mStart, mEnd, String(userId)])
+      : await getOneDb('SELECT SUM(monto) as total FROM gastos WHERE fecha >= ? AND fecha <= ?', [mStart, mEnd]);
 
     monthsList.push({
       name: monthNames[mMonth],
       year: mYear,
-      total: Math.abs(row?.total || 0)
+      total: Math.abs(Number(row?.total || 0))
     });
   }
 
-  // 7. Porcentaje de variación respecto al mes anterior
   let percentChange = 0;
   if (totalPrevMonth > 0) {
     percentChange = Math.round(((totalMonth - totalPrevMonth) / totalPrevMonth) * 1000) / 10;
@@ -287,28 +308,27 @@ export function getDashboardData(userId?: number) {
     percentChange = 100;
   }
 
-  // 8. Gastos por categoría
   const byCategory = userId
-    ? db.prepare(`
+    ? await queryDb(`
         SELECT c.nombre, c.emoji, SUM(g.monto) as total
         FROM gastos g
         JOIN categorias c ON g.categoria_id = c.id
-        WHERE g.id_usuario = ?
-        GROUP BY c.id
+        WHERE CAST(g.id_usuario AS TEXT) = ?
+        GROUP BY c.id, c.nombre, c.emoji
         ORDER BY total DESC
-      `).all(userId) as { nombre: string; emoji: string; total: number }[]
-    : db.prepare(`
+      `, [String(userId)])
+    : await queryDb(`
         SELECT c.nombre, c.emoji, SUM(g.monto) as total
         FROM gastos g
         JOIN categorias c ON g.categoria_id = c.id
-        GROUP BY c.id
+        GROUP BY c.id, c.nombre, c.emoji
         ORDER BY total DESC
-      `).all() as { nombre: string; emoji: string; total: number }[];
+      `);
 
   const recent = expenses.slice(0, 5);
 
-  const userCount = (db.prepare('SELECT COUNT(*) as count FROM usuarios').get() as any)?.count || 0;
-  const totalCount = (db.prepare('SELECT COUNT(*) as count FROM gastos').get() as any)?.count || 0;
+  const userCountRow = await getOneDb('SELECT COUNT(*) as count FROM usuarios');
+  const totalCountRow = await getOneDb('SELECT COUNT(*) as count FROM gastos');
 
   return {
     total,
@@ -317,19 +337,26 @@ export function getDashboardData(userId?: number) {
     percentChange,
     dateRangeStr,
     monthsList,
-    byCategory,
-    recent,
-    totalCount,
-    userCount
+    byCategory: byCategory.map(c => ({ nombre: c.nombre, emoji: c.emoji, total: Number(c.total || 0) })),
+    recent: recent.map(r => ({
+      ...r,
+      id: Number(r.id),
+      id_usuario: Number(r.id_usuario),
+      monto: Number(r.monto || 0),
+      categoriaNombre: r.categorianombre || r.categoriaNombre,
+      categoriaEmoji: r.categoriaemoji || r.categoriaEmoji,
+      usuarioNombre: r.usuarionombre || r.usuarioNombre
+    })),
+    totalCount: Number(totalCountRow?.count || 0),
+    userCount: Number(userCountRow?.count || 0)
   };
 }
 
-export function getAllTransactions(userId?: number) {
-  const db = getDb();
-  const userWhereClause = userId ? 'WHERE g.id_usuario = ?' : '';
-  const userParams = userId ? [userId] : [];
+export async function getAllTransactions(userId?: number) {
+  const userWhereClause = userId ? 'WHERE CAST(g.id_usuario AS TEXT) = ?' : '';
+  const userParams = userId ? [String(userId)] : [];
 
-  return db.prepare(`
+  const rows = await queryDb(`
     SELECT 
       g.id, g.id_usuario, g.monto, g.categoria_id, g.descripcion, g.fecha, g.cuenta, g.origen,
       COALESCE(g.tipo, 'GASTO') as tipo,
@@ -337,23 +364,31 @@ export function getAllTransactions(userId?: number) {
       u.nombre as usuarioNombre
     FROM gastos g
     LEFT JOIN categorias c ON g.categoria_id = c.id
-    LEFT JOIN usuarios u ON g.id_usuario = u.id_usuario
+    LEFT JOIN usuarios u ON CAST(g.id_usuario AS TEXT) = CAST(u.id_usuario AS TEXT)
     ${userWhereClause}
     ORDER BY g.fecha DESC
-  `).all(...userParams) as Expense[];
+  `, userParams);
+
+  return rows.map(r => ({
+    ...r,
+    id: Number(r.id),
+    id_usuario: Number(r.id_usuario),
+    monto: Number(r.monto || 0),
+    categoriaNombre: r.categorianombre || r.categoriaNombre,
+    categoriaEmoji: r.categoriaemoji || r.categoriaEmoji,
+    usuarioNombre: r.usuarionombre || r.usuarioNombre
+  })) as Expense[];
 }
 
-export function getCategories() {
-  const db = getDb();
-  return db.prepare('SELECT id, nombre, emoji FROM categorias ORDER BY nombre ASC').all();
+export async function getCategories() {
+  return await queryDb('SELECT id, nombre, emoji FROM categorias ORDER BY nombre ASC');
 }
 
-export function getRecurringTransactions(userId?: number) {
-  const db = getDb();
-  const userWhere = userId ? 'WHERE r.id_usuario = ?' : '';
-  const params = userId ? [userId] : [];
+export async function getRecurringTransactions(userId?: number) {
+  const userWhere = userId ? 'WHERE CAST(r.id_usuario AS TEXT) = ?' : '';
+  const params = userId ? [String(userId)] : [];
 
-  return db.prepare(`
+  const rows = await queryDb(`
     SELECT 
       r.id, r.id_usuario, r.tipo, r.monto, r.categoria_id, r.descripcion,
       r.dia_cobro, r.duracion_meses, r.activo, r.fecha_creacion,
@@ -362,10 +397,19 @@ export function getRecurringTransactions(userId?: number) {
     LEFT JOIN categorias c ON r.categoria_id = c.id
     ${userWhere}
     ORDER BY r.id DESC
-  `).all(...params);
+  `, params);
+
+  return rows.map(r => ({
+    ...r,
+    id: Number(r.id),
+    id_usuario: Number(r.id_usuario),
+    monto: Number(r.monto || 0),
+    categoriaNombre: r.categorianombre || r.categoriaNombre,
+    categoriaEmoji: r.categoriaemoji || r.categoriaEmoji
+  }));
 }
 
-export function createRecurringTransaction(data: {
+export async function createRecurringTransaction(data: {
   id_usuario: number;
   tipo: string;
   monto: number;
@@ -374,12 +418,10 @@ export function createRecurringTransaction(data: {
   dia_cobro: number;
   duracion_meses?: number | null;
 }) {
-  const db = getDb();
-  const stmt = db.prepare(`
+  return await queryDb(`
     INSERT INTO transacciones_recurrentes (id_usuario, tipo, monto, categoria_id, descripcion, dia_cobro, duracion_meses)
     VALUES (?, ?, ?, ?, ?, ?, ?)
-  `);
-  return stmt.run(
+  `, [
     data.id_usuario,
     data.tipo,
     data.monto,
@@ -387,38 +429,33 @@ export function createRecurringTransaction(data: {
     data.descripcion,
     data.dia_cobro,
     data.duracion_meses || null
-  );
+  ]);
 }
 
-export function toggleRecurringTransaction(id: number, userId?: number) {
-  const db = getDb();
+export async function toggleRecurringTransaction(id: number, userId?: number) {
   if (userId) {
-    return db.prepare(`
+    return await queryDb(`
       UPDATE transacciones_recurrentes
       SET activo = CASE WHEN activo = 1 THEN 0 ELSE 1 END
-      WHERE id = ? AND id_usuario = ?
-    `).run(id, userId);
+      WHERE id = ? AND CAST(id_usuario AS TEXT) = ?
+    `, [id, String(userId)]);
   }
-  return db.prepare(`
+  return await queryDb(`
     UPDATE transacciones_recurrentes
     SET activo = CASE WHEN activo = 1 THEN 0 ELSE 1 END
     WHERE id = ?
-  `).run(id);
+  `, [id]);
 }
 
-export function deleteRecurringTransaction(id: number, userId?: number) {
-  const db = getDb();
+export async function deleteRecurringTransaction(id: number, userId?: number) {
   if (userId) {
-    return db.prepare('DELETE FROM transacciones_recurrentes WHERE id = ? AND id_usuario = ?').run(id, userId);
+    return await queryDb('DELETE FROM transacciones_recurrentes WHERE id = ? AND CAST(id_usuario AS TEXT) = ?', [id, String(userId)]);
   }
-  return db.prepare('DELETE FROM transacciones_recurrentes WHERE id = ?').run(id);
+  return await queryDb('DELETE FROM transacciones_recurrentes WHERE id = ?', [id]);
 }
 
-export function getAdminStats() {
-  const db = getDb();
-
-  // 1. Obtener la lista completa de usuarios con sus métricas acumuladas
-  const users = db.prepare(`
+export async function getAdminStats() {
+  const users = await queryDb(`
     SELECT 
       u.id_usuario,
       COALESCE(NULLIF(TRIM(u.nombre), ''), 'Usuario #' || u.id_usuario) as nombre,
@@ -431,32 +468,31 @@ export function getAdminStats() {
       COALESCE(SUM(g.monto), 0) as totalGastos
     FROM usuarios u
     LEFT JOIN gastos g ON CAST(u.id_usuario AS TEXT) = CAST(g.id_usuario AS TEXT)
-    GROUP BY u.id_usuario
+    GROUP BY u.id_usuario, u.nombre, u.email, u.telegram_id, u.token_vinculacion, u.rol, u.fecha_creacion
     ORDER BY u.id_usuario DESC
-  `).all() as Array<{
-    id_usuario: number;
-    nombre: string;
-    email: string | null;
-    telegram_id: number | null;
-    token_vinculacion: string | null;
-    rol: string;
-    fecha_creacion: string;
-    totalTransacciones: number;
-    totalGastos: number;
-  }>;
+  `);
 
-  // 2. Resumen general de la plataforma
   const totalUsers = users.length;
-  const linkedUsers = users.filter(u => u.telegram_id !== null).length;
+  const linkedUsers = users.filter(u => u.telegram_id !== null && u.telegram_id !== undefined).length;
 
-  const platformTotalRow = db.prepare('SELECT COUNT(*) as count, COALESCE(SUM(monto), 0) as volumen FROM gastos').get() as { count: number; volumen: number };
+  const platformTotalRow = await getOneDb('SELECT COUNT(*) as count, COALESCE(SUM(monto), 0) as volumen FROM gastos');
 
   return {
     totalUsers,
     linkedUsers,
     unlinkedUsers: totalUsers - linkedUsers,
-    totalTransactions: platformTotalRow?.count || 0,
-    totalVolume: platformTotalRow?.volumen || 0,
-    users
+    totalTransactions: Number(platformTotalRow?.count || 0),
+    totalVolume: Number(platformTotalRow?.volumen || 0),
+    users: users.map(u => ({
+      id_usuario: Number(u.id_usuario),
+      nombre: String(u.nombre || ''),
+      email: u.email ? String(u.email) : null,
+      telegram_id: u.telegram_id ? Number(u.telegram_id) : null,
+      token_vinculacion: u.token_vinculacion ? String(u.token_vinculacion) : null,
+      rol: String(u.rol || 'USER'),
+      fecha_creacion: String(u.fecha_creacion || ''),
+      totalTransacciones: Number(u.totaltransacciones || u.totalTransacciones || 0),
+      totalGastos: Number(u.totalgastos || u.totalGastos || 0)
+    }))
   };
 }

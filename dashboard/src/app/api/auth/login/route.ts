@@ -10,7 +10,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Email y contraseña requeridos.' }, { status: 400 });
     }
 
-    const user = loginUser(email, password);
+    const user = await loginUser(email, password);
     const cookieStore = await cookies();
 
     const sessionData = JSON.stringify({

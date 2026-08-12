@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'La contraseña debe tener al menos 6 caracteres.' }, { status: 400 });
     }
 
-    const user = registerUser(nombre, email, password);
+    const user = await registerUser(nombre, email, password);
     const cookieStore = await cookies();
 
     // Guardar sesión en cookie segura HTTP-Only con sameSite lax

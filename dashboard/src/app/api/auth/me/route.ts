@@ -15,7 +15,7 @@ export async function GET() {
     }
 
     const parsed = JSON.parse(sessionCookie);
-    const user = getUserById(parsed.userId);
+    const user = await getUserById(parsed.userId);
 
     if (!user) {
       return NextResponse.json({ loggedIn: false });

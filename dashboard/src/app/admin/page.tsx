@@ -22,7 +22,7 @@ export default async function AdminPage() {
     redirect('/login');
   }
 
-  const user = session?.userId ? getUserById(session.userId) : null;
+  const user = session?.userId ? await getUserById(session.userId) : null;
   if (!user) {
     redirect('/login');
   }
@@ -32,7 +32,7 @@ export default async function AdminPage() {
     redirect('/');
   }
 
-  const stats = getAdminStats();
+  const stats = await getAdminStats();
 
   return (
     <DashboardLayoutShell user={user}>

@@ -3,3 +3,4 @@ python-dotenv==1.0.0
 matplotlib
 Pillow
 requests==2.31.0
+psycopg[binary]>=3.1.0
